@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "10741625531",
+    "project_id": "tesoem-check-point",
+    "storage_bucket": "tesoem-check-point.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:10741625531:android:ceacd8998778e55eb4af9e",
+        "android_client_info": {
+          "package_name": "com.example.tesoemcheckpoint_isc"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC90QTP3S5REkvS6sRf_vL9_e8mBteYZ2s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

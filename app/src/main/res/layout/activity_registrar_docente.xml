@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/registrar_docente"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:clipToOutline="true">
+
+    <ImageView
+        android:id="@+id/logoTeso"
+        android:layout_width="wrap_content"
+        android:layout_height="255dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="37dp"
+        android:layout_marginTop="-19dp"
+        android:layout_marginEnd="35dp"
+        android:clipToOutline="true"
+        android:scaleX="1.3"
+        android:scaleY="1.3"
+        app:srcCompat="@drawable/tesochecklogotrans" />
+
+    <View
+        android:id="@+id/tarjeta"
+        android:layout_width="match_parent"
+        android:layout_height="572dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="0dp"
+
+        android:layout_marginTop="213dp"
+        android:layout_marginEnd="0dp"
+        android:background="@drawable/tarjeta_negra"
+        android:clipToOutline="true" />
+
+    <TextView
+        android:id="@+id/iniciar_ses"
+        android:layout_width="297dp"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/tarjeta"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="51dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginEnd="47dp"
+        android:fontFamily="@font/sora_semibold"
+        android:gravity="top"
+        android:lineSpacingExtra="1sp"
+        android:text="@string/regdocente"
+        android:textAlignment="center"
+        android:textColor="#FBFBFB"
+        android:textSize="24sp"
+        android:translationY="-0.48sp"
+        tools:ignore="RtlCompat" />
+
+    <TextView
+        android:id="@+id/datos"
+        android:layout_width="137dp"
+        android:layout_height="21dp"
+        android:layout_below="@+id/iniciar_ses"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="50dp"
+        android:fontFamily="@font/inter"
+        android:lineSpacingExtra="1sp"
+        android:text="@string/datosldocente"
+        android:textAlignment="center"
+        android:textColor="@color/TesoAzul"
+        android:textSize="14sp"
+        android:translationY="-0.48sp" />
+
+    <!-- Nombre input -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/nombre_input_layout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="wrap_content"
+        android:layout_height="64dp"
+        android:layout_below="@+id/datos"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="29dp"
+        android:layout_marginEnd="16dp"
+        android:hint="@string/rnombrecomple"
+        app:boxCornerRadiusTopEnd="16dp"
+        app:boxCornerRadiusTopStart="16dp"
+        app:errorEnabled="true">
+
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/nombre_input"
+            android:layout_width="match_parent"
+            android:layout_height="75dp"
+            android:background="@color/TesoBlanco"
+            android:inputType="textPersonName" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Correo input -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/email_input_layout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="wrap_content"
+        android:layout_height="64dp"
+        android:layout_below="@+id/nombre_input_layout"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="29dp"
+        android:layout_marginEnd="16dp"
+        android:hint="@string/scorreo"
+        app:boxCornerRadiusTopEnd="16dp"
+        app:boxCornerRadiusTopStart="16dp"
+        app:errorEnabled="true">
+
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/email_input"
+            android:layout_width="match_parent"
+            android:layout_height="75dp"
+            android:background="@color/TesoBlanco"
+            android:inputType="textEmailAddress" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Contrasena input -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/password_input_layout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="wrap_content"
+        android:layout_height="64dp"
+        android:layout_below="@+id/email_input_layout"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="16dp"
+        android:hint="@string/scontrasena"
+        app:boxCornerRadiusTopEnd="16dp"
+        app:boxCornerRadiusTopStart="16dp"
+        app:errorEnabled="true">
+
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/password_input"
+            android:layout_width="match_parent"
+            android:layout_height="75dp"
+            android:background="@color/TesoBlanco"
+            android:inputType="textPassword" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Confirmar Contrasena input -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/confirmpassword_input_layout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:hint="@string/confcontra"
+        app:errorEnabled="true"
+        app:boxCornerRadiusTopEnd="16dp"
+        app:boxCornerRadiusTopStart="16dp"
+        android:layout_below="@+id/password_input_layout"
+        android:layout_marginTop="24dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true" >
+
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/confirmpassword_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/TesoBlanco"
+            android:inputType="textPassword" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- iniciar session button -->
+    <Button
+        android:id="@+id/login_button"
+        android:layout_width="320dp"
+        android:layout_height="56dp"
+        android:layout_below="@+id/confirmpassword_input_layout"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/TesoVerde2"
+        android:text="@string/registrarse"
+        app:cornerRadius="16dp" />
+
+
+</RelativeLayout>

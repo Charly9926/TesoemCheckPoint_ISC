@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">TesoemCheckPoint_ISC</string>
+    <string name="splashtext">TESOEM CHECK POINT</string>
+    <string name="tesoemcheck">TESOEM CHECK POINT</string>
+    <string name="soydocente">Soy docente</string>
+    <string name="soyalumno">Soy alumno</string>
+    <string name="iniciadocente">Iniciar session docente</string>
+    <string name="datosldocente">Pon tus datos abajo</string>
+    <string name="iniciaalumno">Acceder Alumno</string>
+    <string name="datosalumno">Inserta los datos que proporciono el docente</string>
+    <string name="scorreo">Correo electronico</string>
+    <string name="scontrasena">Contraseña</string>
+    <string name="iniciasession">Iniciar session</string>
+    <string name="aunnoreg">¿Aun no se ha registrado?  <clickable><font color='#FFFFFF'>Registrarse</font></clickable> </string>
+    <string name="registrarse">Registrarse</string>
+    <string name="regdocente">Registrar docente</string>
+    <string name="confcontra">Confirmar contraseña</string>
+    <string name="rnombre">Nombre</string>
+    <string name="rnombrecomple">Nombre Completo</string>
+    <string name="logout">Cerrar session</string>
+</resources>
