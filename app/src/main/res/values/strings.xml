@@ -18,4 +18,10 @@
     <string name="rnombre">Nombre</string>
     <string name="rnombrecomple">Nombre Completo</string>
     <string name="logout">Cerrar session</string>
+    <string name="mostrarQR">Mostrar QR</string>
+    <string name="fRegAlum">Registrar Alumno</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+
 </resources>

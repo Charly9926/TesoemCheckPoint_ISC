@@ -7,7 +7,6 @@ import androidx.core.text.HtmlCompat;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.Html;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
@@ -106,7 +105,7 @@ public class IniciarDocenteActivity extends AppCompatActivity {
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 Log.d("TAG","onSuccess: " + documentSnapshot.getData());
                 if ("1".equals(documentSnapshot.getString("EsDocente"))){
-                    startActivity(new Intent(getApplicationContext(),DocenteDashboard.class));
+                    startActivity(new Intent(getApplicationContext(), DocenteDashboardActivity.class));
                     finish();
                 } else {
                     //El usuario no es docente lo manda al menu principal
