@@ -2,11 +2,17 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/alumno_page"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
-    android:clipToOutline="true">
+    tools:context=".DocenteDashboardActivity"
+    >
+
+    <FrameLayout
+        android:id="@+id/frame_layout"
+        android:layout_width="match_parent"
+        android:layout_height="729dp" />
+
 
     <com.google.android.material.bottomappbar.BottomAppBar
         android:id="@+id/bottomAppBar"
@@ -25,10 +31,11 @@
             android:layout_marginEnd="20dp"
             android:background="@android:color/transparent"
             app:labelVisibilityMode="labeled"
-            app:menu="@menu/bottom_menu" />
+            app:menu="@menu/bottom_menu_alumno" />
     </com.google.android.material.bottomappbar.BottomAppBar>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/flotante"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:backgroundTint="@color/white"
@@ -36,4 +43,6 @@
         app:layout_anchor="@id/bottomAppBar"
         app:maxImageSize="40dp"
         app:tint="@color/TesoAzul" />
+
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

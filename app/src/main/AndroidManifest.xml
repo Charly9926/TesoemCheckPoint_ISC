@@ -13,7 +13,7 @@
         android:theme="@style/Theme.TesoemCheckPoint_ISC"
         tools:targetApi="31">
         <activity
-            android:name=".AlumnoDashboard"
+            android:name=".AlumnoDashboardActivity"
             android:exported="false" />
         <activity
             android:name=".DocenteDashboardActivity"

@@ -74,11 +74,11 @@ public class CrearClaseFragment extends Fragment {
         show_qr_code_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String qrCode = qr_code_image.getTag().toString();
-                if (!qrCode.isEmpty()) {
-                    showQRCode(qrCode);
-                } else {
+                if (classId == null || classId.isEmpty()) {
                     Toast.makeText(requireContext(), "No hay código QR para mostrar", Toast.LENGTH_SHORT).show();
+                } else {
+                    String qrCode = qr_code_image.getTag().toString();
+                    showQRCode(qrCode);
                 }
             }
         });

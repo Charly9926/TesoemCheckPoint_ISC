@@ -20,6 +20,9 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -64,28 +67,44 @@ public class RegistrarAlumnoFragment extends Fragment {
             public void onClick(View v) {
                 if (isValidInput()) {
                     // Respuesta correcta
-                    firebaseAuth.createUserWithEmailAndPassword(emailInput.getText().toString(),passwordInput.getText().toString()).addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+                    String email = emailInput.getText().toString();
+                    String password = passwordInput.getText().toString();
+
+                    firebaseAuth.createUserWithEmailAndPassword(email, password).addOnSuccessListener(new OnSuccessListener<AuthResult>() {
                         @Override
                         public void onSuccess(AuthResult authResult) {
                             //guardar id del usuario creado
-                            FirebaseUser usuario = firebaseAuth.getCurrentUser();
+                            FirebaseUser usuario = authResult.getUser();
                             DocumentReference df = firebaseFirestore.collection("Usuarios").document(usuario.getUid());
                             //mensaje
                             Toast.makeText(getActivity(), "Registro exitoso", Toast.LENGTH_SHORT).show();
                             //registrar usuario en base de datos
                             Map<String,Object> usuarioInfo = new HashMap<>();
-                            usuarioInfo.put("Nombre", "Alumno"); // You can change this to get the user's name from another EditText
-                            usuarioInfo.put("Correo",emailInput.getText().toString());
-                            usuarioInfo.put("EsDocente","0"); // Set the user as an alumno
+                            usuarioInfo.put("Nombre", "Alumno");
+                            usuarioInfo.put("Correo",email);
+                            usuarioInfo.put("EsDocente","0"); // Usuario como Alumno
 
                             df.set(usuarioInfo);
                         }
                     }).addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            // Respuesta incorrecta malos datos
-                            //mensaje
-                            Toast.makeText(getActivity(), "Fallo a crear cuenta", Toast.LENGTH_SHORT).show();
+                            String errorMessage = null;
+                            if (e instanceof FirebaseAuthUserCollisionException) {
+                                errorMessage = "Ya existe una cuenta registrada con este correo electrónico.";
+                            } else if (e instanceof FirebaseAuthWeakPasswordException) {
+                                errorMessage = "La contraseña debe tener al menos 6 caracteres.";
+                            } else if (e instanceof FirebaseAuthInvalidCredentialsException) {
+                                errorMessage = "El formato del correo electrónico es inválido.";
+                            } else {
+                                errorMessage = "Ha ocurrido un error desconocido. Inténtalo de nuevo más tarde.";
+                            }
+
+                            if (errorMessage != null) {
+                                Toast.makeText(getActivity(), errorMessage, Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getActivity(), "Fallo a crear cuenta", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     });
 
@@ -95,7 +114,7 @@ public class RegistrarAlumnoFragment extends Fragment {
         return view;
     }
 
-    //Validar si los campos no estan vacios
+    //Validar si los campos estan correctos
     private boolean isValidInput() {
         String email = emailInput.getText().toString().trim();
         String password = passwordInput.getText().toString().trim();
@@ -108,6 +127,11 @@ public class RegistrarAlumnoFragment extends Fragment {
 
         if (password.isEmpty()) {
             passwordInputLayout.setError("La contraseña es requerida");
+            return false;
+        }
+
+        if (password.length() < 6) {
+            passwordInputLayout.setError("La contraseña debe tener al menos 6 caracteres");
             return false;
         }
 

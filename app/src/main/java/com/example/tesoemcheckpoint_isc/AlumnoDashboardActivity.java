@@ -10,15 +10,16 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.example.tesoemcheckpoint_isc.databinding.ActivityDocenteDashboardBinding;
+import com.example.tesoemcheckpoint_isc.databinding.ActivityAlumnoDashboardBinding;
 import com.google.firebase.auth.FirebaseAuth;
 
-public class DocenteDashboardActivity extends AppCompatActivity {
-    ActivityDocenteDashboardBinding binding;
+public class AlumnoDashboardActivity extends AppCompatActivity {
+    ActivityAlumnoDashboardBinding binding;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityDocenteDashboardBinding.inflate(getLayoutInflater());
+        binding = ActivityAlumnoDashboardBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         //Boton flotante.
         binding.flotante.setOnClickListener(v -> replaceFragment(new CrearClaseFragment()));
@@ -30,8 +31,6 @@ public class DocenteDashboardActivity extends AppCompatActivity {
                 replaceFragment(new HomeFragment());
             } else if (item.getItemId() == R.id.perfil) {
                 replaceFragment(new PerfilFragment());
-            } else if (item.getItemId() == R.id.addalumno) {
-                replaceFragment(new RegistrarAlumnoFragment());
             } else if (item.getItemId() == R.id.logout) {
                 // Mostrar alerta antes de cerrar sesión
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -60,28 +59,3 @@ public class DocenteDashboardActivity extends AppCompatActivity {
         fragmentTransaction.commit();
     }
 }
-
-//    //Validar si no hay usuarios conectados al iniciar actividad si no hay mandar a inicio
-//    @Override
-//    protected void onStart() {
-//        super.onStart();
-//        if (FirebaseAuth.getInstance().getCurrentUser() == null){
-//            startActivity(new Intent(getApplicationContext(), MainActivity.class));
-//            finish();
-//        }
-//    }
-
-//    //firebase
-//    FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
-//    FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
-//
-//    //Cerrar session
-//    Button logout = findViewById(R.id.ButtonLogout);
-//        logout.setOnClickListener(new View.OnClickListener() {
-//        @Override
-//        public void onClick(View v) {
-//            FirebaseAuth.getInstance().signOut();
-//            startActivity(new Intent(getApplicationContext(),MainActivity.class));
-//            finish();
-//        }
-//    });

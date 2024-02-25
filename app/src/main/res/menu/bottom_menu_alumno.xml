@@ -1,4 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/home"
+        android:title="Home"
+        android:icon="@drawable/baseline_home_24"/>
 
+    <item
+        android:id="@+id/perfil"
+        android:title="Perfil"
+        android:icon="@drawable/baseline_person_24"/>
+
+    <item
+        android:id="@+id/qrcode"
+        android:title=""
+        android:enabled="true"/>
+
+    <item
+        android:id="@+id/logout"
+        android:title="Log out"
+        android:icon="@drawable/baseline_logout_24"/>
 </menu>
