@@ -4,37 +4,56 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.google.firebase.firestore.FieldValue;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.zxing.Result;
-import com.google.zxing.ResultPoint;
-import com.journeyapps.barcodescanner.BarcodeCallback;
 import com.journeyapps.barcodescanner.BarcodeResult;
-import com.journeyapps.barcodescanner.CaptureManager;
 import com.journeyapps.barcodescanner.DecoratedBarcodeView;
+import com.journeyapps.barcodescanner.ZXingScannerView;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-public class QRScanFragment extends Fragment {
-    private CaptureManager capture;
-    private DecoratedBarcodeView barcodeView;
+public class QRScanFragment extends Fragment implements ZXingScannerView.ResultHandler {
+
+    private ZXingScannerView barcodeView;
+    private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
+    private String classId;
+    private String className;
+
+    public QRScanFragment(String classId, String className) {
+        this.classId = classId;
+        this.className = className;
+    }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_scan, container, false);
+        View view = inflater.inflate(R.layout.fragment_qr_scan, container, false);
+
+        mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+
         barcodeView = view.findViewById(R.id.barcode_view);
+        Button captureButton = view.findViewById(R.id.capture_button);
 
-        // Configura el ResultCallback en el DecoratedBarcodeView
-        barcodeView.setBarcodeViewInitializedListener(new BarcodeCallback());
-
-        capture = new CaptureManager(getActivity(), barcodeView);
-        capture.initializeFromIntent(getActivity().getIntent(), savedInstanceState);
-        capture.decode();
+        captureButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                barcodeView.resume();
+            }
+        });
 
         return view;
     }
@@ -42,56 +61,58 @@ public class QRScanFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        capture.onResume();
+        barcodeView.setResultHandler(this);
+        barcodeView.startCamera();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        capture.onPause();
+        barcodeView.stopCamera();
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        capture.onDestroy();
+    public void handleResult(BarcodeResult result) {
+        String qrCodeContent = result.getText();
+        saveUserToClass(qrCodeContent);
     }
 
-    // Cambia el nombre de la clase a BarcodeCallback
-    private class BarcodeCallback implements DecoratedBarcodeView.TorchListener, DecoratedBarcodeView.BarcodeCallback {
-        @Override
-        public void barcodeResult(BarcodeResult result) {
-            Result rawResult = result.getResult();
-            String qrCode = rawResult.getText();
+    private void saveUserToClass(String qrCodeContent) {
+        // Decode the base64 QR code content and retrieve the user ID
+        String userId = extractUserIdFromQRCode(qrCodeContent);
 
-            if (qrCode != null) {
-                // Tu lógica para manejar el resultado del escaneo
-                String userId = decodeQRCode(qrCode);
+        if (userId != null) {
+            DocumentReference classRef = db.collection("Classes").document(classId);
+            classRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        if (document.exists()) {
+                            Map<String, Object> userMap = new HashMap<>();
+                            userMap.put("user", userId);
 
-                // Resto del código...
-            }
+                            db.collection("Classes").document(classId).collection("members").add(userMap);
+                            Toast.makeText(getContext(), "Usuario agregado a la clase " + className, Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getContext(), "La clase no existe", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "Error al obtener la clase", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        } else {
+            Toast.makeText(getContext(), "Código QR inválido", Toast.LENGTH_SHORT).show();
         }
+    }
 
-        @Override
-        public void possibleResultPoints(List<ResultPoint> resultPoints) {
-            // Puedes dejar esto vacío o manejar eventos adicionales si es necesario
+    private String extractUserIdFromQRCode(String qrCodeContent) {
+        // Implement your logic to extract the user ID from the base64 QR code content
+        // For example, if the user ID is the first 24 characters of the QR code content
+        if (qrCodeContent.length() >= 24) {
+            return qrCodeContent.substring(0, 24);
         }
-
-        @Override
-        public void onTorchOn() {
-            // Puedes manejar eventos relacionados con la linterna encendida si es necesario
-        }
-
-        @Override
-        public void onTorchOff() {
-            // Puedes manejar eventos relacionados con la linterna apagada si es necesario
-        }
-
-        private String decodeQRCode(String qrCode) {
-            // Implementa la decodificación del código QR en base 64 y obtén el userId
-            // Puedes usar una biblioteca como ZXing o Google Mobile Vision para decodificar el código QR
-            // En este ejemplo, asumimos que el código QR ya está decodificado y contiene el userId
-            return qrCode;
-        }
+        return null;
     }
 }
