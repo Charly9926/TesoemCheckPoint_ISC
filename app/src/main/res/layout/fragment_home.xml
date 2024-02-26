@@ -8,22 +8,23 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/classes_recycler_view"
-        android:layout_width="390dp"
-        android:layout_height="568dp"
-        android:layout_marginTop="56dp"
+        android:layout_width="391dp"
+        android:layout_height="646dp"
+        android:layout_marginTop="68dp"
         android:scrollbars="vertical"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/title_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:text="Este es home"
+        android:text="@string/clases"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

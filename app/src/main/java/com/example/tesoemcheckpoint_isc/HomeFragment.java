@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -36,33 +37,72 @@ public class HomeFragment extends Fragment {
         List<String> userIds = new ArrayList<>();
         userIds.add(FirebaseAuth.getInstance().getCurrentUser().getUid());
 
-        Query query1 = FirebaseFirestore.getInstance()
-                .collection("Clases")
-                .whereIn("admin", userIds);
+        // Verificar si el usuario es administrador o alumno
+        DocumentReference userRef = FirebaseFirestore.getInstance().collection("Usuarios").document(userIds.get(0));
+        userRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DocumentSnapshot documentSnapshot = task.getResult();
+                if (documentSnapshot.exists()) {
+                    String userRole = documentSnapshot.getString("EsDocente");
+                    if ("1".equals(userRole)) {
+                        // Usuario es administrador
 
-        Query query2 = FirebaseFirestore.getInstance()
-                .collection("Clases")
-                .whereIn("members", userIds);
+                        Query query1 = FirebaseFirestore.getInstance()
+                                .collection("Clases")
+                                .whereIn("admin", userIds);
 
-        List<Task<QuerySnapshot>> tasks = new ArrayList<>();
-        tasks.add(query1.get());
-        tasks.add(query2.get());
+                        List<Task<QuerySnapshot>> tasks = new ArrayList<>();
+                        tasks.add(query1.get());
 
-        Tasks.whenAllSuccess(tasks.toArray(new Task[0]))
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        List<ClassModel> classList = new ArrayList<>();
-                        for (Task<QuerySnapshot> queryTask : tasks) {
-                            for (DocumentSnapshot document : queryTask.getResult()) {
-                                classList.add(new ClassModel(document));
-                            }
-                        }
-                        ClassAdapter classAdapter = new ClassAdapter(classList);
-                        classesRecyclerView.setAdapter(classAdapter);
-                    } else {
-                        Log.e("HomeFragment", "Error getting documents: ", task.getException());
+                        Tasks.whenAllSuccess(tasks.toArray(new Task[0]))
+                                .addOnCompleteListener(taskAll -> {
+                                    if (taskAll.isSuccessful()) {
+                                        List<ClassModel> classList = new ArrayList<>();
+                                        for (Task<QuerySnapshot> queryTask : tasks) {
+                                            for (DocumentSnapshot document : queryTask.getResult()) {
+                                                classList.add(new ClassModel(document));
+                                            }
+                                        }
+                                        ClassAdapter classAdapter = new ClassAdapter(classList);
+                                        classesRecyclerView.setAdapter(classAdapter);
+                                    } else {
+                                        Log.e("HomeFragment", "Error getting documents: ", taskAll.getException());
+                                    }
+                                });
+
+                    } else if ("0".equals(userRole)){
+                        // Usuario es alumno
+
+                        Query query2 = FirebaseFirestore.getInstance()
+                                .collection("Clases")
+                                .whereArrayContainsAny("members", userIds);
+
+                        List<Task<QuerySnapshot>> tasks = new ArrayList<>();
+                        tasks.add(query2.get());
+
+                        Tasks.whenAllSuccess(tasks.toArray(new Task[0]))
+                                .addOnCompleteListener(taskAll -> {
+                                    if (taskAll.isSuccessful()) {
+                                        List<ClassModel> classList = new ArrayList<>();
+                                        for (Task<QuerySnapshot> queryTask : tasks) {
+                                            for (DocumentSnapshot document : queryTask.getResult()) {
+                                                classList.add(new ClassModel(document));
+                                            }
+                                        }
+                                        ClassAdapter classAdapter = new ClassAdapter(classList);
+                                        classesRecyclerView.setAdapter(classAdapter);
+                                    } else {
+                                        Log.e("HomeFragment", "Error getting documents: ", taskAll.getException());
+                                    }
+                                });
                     }
-                });
+                } else {
+                    Log.e("HomeFragment", "Document does not exist");
+                }
+            } else {
+                Log.e("HomeFragment", "Error getting document: ", task.getException());
+            }
+        });
 
         return view;
     }

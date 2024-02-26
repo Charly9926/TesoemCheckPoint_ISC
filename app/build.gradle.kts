@@ -34,6 +34,7 @@ android {
     buildFeatures {
         viewBinding = true
     }
+
 }
 
 dependencies {
@@ -52,5 +53,6 @@ dependencies {
     implementation("com.google.zxing:core:3.4.1")
     implementation ("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation ("com.firebaseui:firebase-ui-firestore:8.0.0")
+    implementation ("com.journeyapps:zxing-android-embedded:4.3.0")
 
 }

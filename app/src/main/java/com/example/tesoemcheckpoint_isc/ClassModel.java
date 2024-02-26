@@ -2,21 +2,30 @@ package com.example.tesoemcheckpoint_isc;
 
 import com.google.firebase.firestore.DocumentSnapshot;
 
+import java.util.List;
+
 public class ClassModel {
     private String className;
-    private String membersCount;
+    private List<Object> members;
+    private String adminId;
+    private String classId;
 
     public ClassModel() {
     }
 
-    public ClassModel(int classImage, String className, String membersCount) {
+    public ClassModel(String className, List<Object> members, String adminId) {
         this.className = className;
-        this.membersCount = membersCount;
+        this.members = members;
+        this.adminId = adminId;
+        this.classId = classId;
     }
 
     public ClassModel(DocumentSnapshot documentSnapshot) {
-        className = documentSnapshot.getString("class_name");
-        membersCount = documentSnapshot.getString("members_count");
+        className = documentSnapshot.getString("className");
+        List<Object> membersList = (List<Object>) documentSnapshot.get("members");
+        members = membersList;
+        adminId = documentSnapshot.getString("admin");
+        classId = documentSnapshot.getId();
     }
 
     public String getClassName() {
@@ -27,11 +36,32 @@ public class ClassModel {
         this.className = className;
     }
 
-    public String getMembersCount() {
-        return membersCount;
+    public List<Object> getMembers() {
+        return members;
     }
 
-    public void setMembersCount(String membersCount) {
-        this.membersCount = membersCount;
+    public void setMembers(List<Object> members) {
+        this.members = members;
     }
+
+    public String getAdminId() {
+        return adminId;
+    }
+
+    public void setAdminId(String adminId) {
+        this.adminId = adminId;
+    }
+
+    public String getClassId() {
+        return classId;
+    }
+
+    public void setClassId(String classId) {
+        this.classId = classId;
+    }
+
+    public int getMembersCount() {
+        return members.size();
+    }
+
 }

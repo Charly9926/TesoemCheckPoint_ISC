@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle"
+            android:thickness="0dp">
+            <gradient
+                android:startColor="#B21D6BB4"
+                android:endColor="#B234842E"
+                android:angle="200" />
+            <corners android:radius="13dp" />
+            <padding
+                android:left="6dp"
+                android:top="6dp"
+                android:right="6dp"
+                android:bottom="6dp" />
+            <elevation
+                android:elevation="4dp" />
+        </shape>
+    </item>
+    <item android:id="@android:id/background">
+        <ripple android:color="?android:attr/colorControlHighlight">
+            <item android:drawable="@color/TesoBlanco" />
+        </ripple>
+    </item>
+</layer-list>

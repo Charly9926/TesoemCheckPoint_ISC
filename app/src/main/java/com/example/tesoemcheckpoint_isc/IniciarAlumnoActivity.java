@@ -41,7 +41,7 @@ public class IniciarAlumnoActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_iniciar_docente);
+        setContentView(R.layout.activity_iniciar_alumno);
 
         //firebase
         firebaseAuth = FirebaseAuth.getInstance();
