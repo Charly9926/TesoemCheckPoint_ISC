@@ -1,5 +1,6 @@
 package com.example.tesoemcheckpoint_isc;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -65,6 +66,12 @@ public class HomeFragment extends Fragment {
                                         }
                                         ClassAdapter classAdapter = new ClassAdapter(classList);
                                         classesRecyclerView.setAdapter(classAdapter);
+                                        classAdapter.setOnItemClickListener((classModel) -> {
+                                            // Start ClassDetailsActivity and pass the selected classModel
+                                            Intent intent = new Intent(getActivity(), ClassDetailsActivity.class);
+                                            intent.putExtra("classModel", classModel);
+                                            startActivity(intent);
+                                        });
                                     } else {
                                         Log.e("HomeFragment", "Error getting documents: ", taskAll.getException());
                                     }
@@ -91,6 +98,12 @@ public class HomeFragment extends Fragment {
                                         }
                                         ClassAdapter classAdapter = new ClassAdapter(classList);
                                         classesRecyclerView.setAdapter(classAdapter);
+                                        classAdapter.setOnItemClickListener((classModel) -> {
+                                            // Start ClassDetailsActivity and pass the selected classModel
+                                            Intent intent = new Intent(getActivity(), ClassDetailsActivity.class);
+                                            intent.putExtra("classModel", classModel);
+                                            startActivity(intent);
+                                        });
                                     } else {
                                         Log.e("HomeFragment", "Error getting documents: ", taskAll.getException());
                                     }

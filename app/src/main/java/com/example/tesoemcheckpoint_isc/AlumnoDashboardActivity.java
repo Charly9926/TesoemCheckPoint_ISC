@@ -9,6 +9,7 @@ import androidx.fragment.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 
 import com.example.tesoemcheckpoint_isc.databinding.ActivityAlumnoDashboardBinding;
 import com.google.firebase.auth.FirebaseAuth;
@@ -22,7 +23,7 @@ public class AlumnoDashboardActivity extends AppCompatActivity {
         binding = ActivityAlumnoDashboardBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         //Boton flotante.
-        binding.flotante.setOnClickListener(v -> replaceFragment(new CrearClaseFragment()));
+        binding.flotanteQR.setOnClickListener(v -> v.getContext().startActivity(new Intent(v.getContext(), QRScannerActivity.class)));
 
         replaceFragment(new HomeFragment());
         binding.bottomNavigationView.setBackground(null);
@@ -31,7 +32,13 @@ public class AlumnoDashboardActivity extends AppCompatActivity {
                 replaceFragment(new HomeFragment());
             } else if (item.getItemId() == R.id.perfil) {
                 replaceFragment(new PerfilFragment());
-            } else if (item.getItemId() == R.id.logout) {
+            }else if (item.getItemId() == R.id.qrcode) {
+                Intent intent = new Intent(this, QRScannerActivity.class);
+                startActivity(intent);
+            }else if (item.getItemId() == R.id.flotanteQR) {
+                Intent intent = new Intent(this, QRScannerActivity.class);
+                startActivity(intent);
+            }else if (item.getItemId() == R.id.logout) {
                 // Mostrar alerta antes de cerrar sesión
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle("Cerrar sesión");
@@ -55,7 +62,7 @@ public class AlumnoDashboardActivity extends AppCompatActivity {
     private void replaceFragment(Fragment fragment) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.frame_layout, fragment);
+        fragmentTransaction.replace(R.id.frame_layout_Alumno, fragment);
         fragmentTransaction.commit();
     }
 }

@@ -3,6 +3,7 @@ package com.example.tesoemcheckpoint_isc;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -14,9 +15,18 @@ import java.util.List;
 public class ClassAdapter extends RecyclerView.Adapter<ClassAdapter.ClassViewHolder> {
 
     private List<ClassModel> classList;
+    private OnItemClickListener onItemClickListener;
 
     public ClassAdapter(List<ClassModel> classList) {
         this.classList = classList;
+    }
+
+    public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
+        this.onItemClickListener = onItemClickListener;
+    }
+
+    public interface OnItemClickListener {
+        void onItemClick(ClassModel classModel);
     }
 
     @NonNull
@@ -31,6 +41,12 @@ public class ClassAdapter extends RecyclerView.Adapter<ClassAdapter.ClassViewHol
         ClassModel currentClass = classList.get(position);
         holder.className.setText(currentClass.getClassName());
         holder.membersCount.setText("(" + currentClass.getMembersCount() + ")");
+        // Set the click listener
+        holder.itemView.setOnClickListener(v -> {
+            if (onItemClickListener != null) {
+                onItemClickListener.onItemClick(currentClass);
+            }
+        });
     }
 
     @Override

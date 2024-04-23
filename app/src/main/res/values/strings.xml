@@ -20,7 +20,6 @@
     <string name="logout">Cerrar session</string>
     <string name="mostrarQR">Mostrar QR</string>
     <string name="fRegAlum">Registrar Alumno</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="arrow_description">Va a clase</string>
     <string name="clases">Clases</string>

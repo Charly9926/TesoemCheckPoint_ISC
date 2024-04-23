@@ -2,18 +2,20 @@ package com.example.tesoemcheckpoint_isc;
 
 import com.google.firebase.firestore.DocumentSnapshot;
 
+import java.io.Serializable;
+import java.io.StringReader;
 import java.util.List;
 
-public class ClassModel {
+public class ClassModel implements Serializable {
     private String className;
     private List<Object> members;
     private String adminId;
     private String classId;
+    private String qrCode;
 
-    public ClassModel() {
-    }
+    public ClassModel(){}
 
-    public ClassModel(String className, List<Object> members, String adminId) {
+    public ClassModel(String className, List<Object> members, String adminId, String classId) {
         this.className = className;
         this.members = members;
         this.adminId = adminId;
@@ -62,6 +64,14 @@ public class ClassModel {
 
     public int getMembersCount() {
         return members.size();
+    }
+
+    public String getQrCode() {
+        return qrCode;
+    }
+
+    public void setQrCode(String qrCode) {
+        this.qrCode = qrCode;
     }
 
 }
