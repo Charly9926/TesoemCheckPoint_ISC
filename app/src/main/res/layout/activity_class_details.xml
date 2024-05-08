@@ -38,4 +38,14 @@
       android:textSize="18sp"
       tools:text="Class ID: class123" />
 
+  <Button
+      android:id="@+id/showQRCodeButton"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="Mostrar Código QR"
+      android:layout_marginTop="16dp"
+      app:layout_constraintTop_toBottomOf="@+id/classIdTextView"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintEnd_toEndOf="parent" />
+
 </LinearLayout>

@@ -15,11 +15,12 @@ public class ClassModel implements Serializable {
 
     public ClassModel(){}
 
-    public ClassModel(String className, List<Object> members, String adminId, String classId) {
+    public ClassModel(String className, List<Object> members, String adminId, String classId, String qrCode) {
         this.className = className;
         this.members = members;
         this.adminId = adminId;
         this.classId = classId;
+        this.qrCode = qrCode;
     }
 
     public ClassModel(DocumentSnapshot documentSnapshot) {
@@ -28,6 +29,7 @@ public class ClassModel implements Serializable {
         members = membersList;
         adminId = documentSnapshot.getString("admin");
         classId = documentSnapshot.getId();
+        qrCode = documentSnapshot.getString("qrCode");
     }
 
     public String getClassName() {
