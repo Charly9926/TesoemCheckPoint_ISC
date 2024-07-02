@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
@@ -21,6 +22,10 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -88,13 +93,13 @@ public class ClassDetailsActivity extends AppCompatActivity {
             }
         });
 
-        //Obtener Codigo QR de la clase y mostrar el codigo.
-        String qrCode = classModel.getQrCode();
+        //Obtener Codigo ID de la clase y mostrar el codigo.
+        String qrCode = classModel.getClassId();
         showQRCodeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String qrCode = classModel.getQrCode(); // Obtener el código QR de la clase
-                showQRCode(qrCode);
+                String qrCode = classModel.getClassId(); // Obtener el código ID de la clase para convertirlo a QR
+                showQRCode(classModel, qrCode);
             }
         });
     }
@@ -211,19 +216,25 @@ public class ClassDetailsActivity extends AppCompatActivity {
     }
 
 
-    private void showQRCode(String qrCode) {
-        showQRCodeDialog(qrCode);
+    private void showQRCode(ClassModel classModel, String qrCode) {
+        showQRCodeDialog(classModel, qrCode);
     }
 
-    private void showQRCodeDialog(String qrCode) {
+    private void showQRCodeDialog(ClassModel classModel, String qrCode) {
         // Crear el dialog box
         Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_qr_code);
 
+        // Generar el código QR con la cadena de texto classModel.getQrCode()
+        String qrCodeText = classModel.getClassId();
+        Bitmap bitmap = generateQRCode(qrCodeText);
+
         // Obtener la imagen del código QR
         ImageView qrCodeImage = dialog.findViewById(R.id.qr_code_image);
-        Bitmap bitmap = decodeBase64ToBitmap(qrCode);
         qrCodeImage.setImageBitmap(bitmap);
+
+        // Mostrar el dialog box
+        dialog.show();
 
         // Agregar listener al botón de descargar
         Button downloadButton = dialog.findViewById(R.id.download_button);
@@ -234,9 +245,26 @@ public class ClassDetailsActivity extends AppCompatActivity {
                 downloadQRCode(bitmap);
             }
         });
+    }
 
-        // Mostrar el dialog box
-        dialog.show();
+    private Bitmap generateQRCode(String qrCodeText) {
+        // Utilizar la biblioteca ZXing para generar el código QR
+        QRCodeWriter writer = new QRCodeWriter();
+        BitMatrix matrix;
+        try {
+            matrix = writer.encode(qrCodeText, BarcodeFormat.QR_CODE, 200, 200);
+        } catch (WriterException e) {
+            // Handle the exception, for example, by logging an error message
+            Log.e("QRCodeGeneration", "Error generating QR code", e);
+            return null; // or some default bitmap
+        }
+        Bitmap bitmap = Bitmap.createBitmap(matrix.getWidth(), matrix.getHeight(), Bitmap.Config.ARGB_8888);
+        for (int x = 0; x < matrix.getWidth(); x++) {
+            for (int y = 0; y < matrix.getHeight(); y++) {
+                bitmap.setPixel(x, y, matrix.get(x, y)? Color.BLACK : Color.WHITE);
+            }
+        }
+        return bitmap;
     }
 
     private void downloadQRCode(Bitmap bitmap) {

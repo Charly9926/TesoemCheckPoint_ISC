@@ -22,7 +22,7 @@
         android:layout_centerHorizontal="true"
         android:text="Scan QR Code" />
 
-    <com.example.tesoemcheckpoint_isc.CameraPreview
+    <SurfaceView
         android:id="@+id/qr_surface_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

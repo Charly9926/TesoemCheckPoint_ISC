@@ -22,7 +22,8 @@
             android:exported="false" />
         <activity
             android:name=".QRCodeScanner"
-            android:exported="false" />
+            android:exported="false"
+            />
         <activity
             android:name=".QRScannerActivity"
             android:exported="false" />
