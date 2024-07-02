@@ -280,8 +280,4 @@ public class ClassDetailsActivity extends AppCompatActivity {
         }
     }
 
-    private Bitmap decodeBase64ToBitmap(String base64String) {
-        byte[] decodedString = Base64.decode(base64String, Base64.DEFAULT);
-        return BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-    }
 }

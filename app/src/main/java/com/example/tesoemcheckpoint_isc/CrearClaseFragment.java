@@ -22,6 +22,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.zxing.BarcodeFormat;
@@ -110,6 +111,8 @@ public class CrearClaseFragment extends Fragment {
                         Toast.makeText(requireContext(), "Clase creada exitosamente", Toast.LENGTH_SHORT).show();
                         qr_code_image.setTag(qrCode); // Save the QR code for later use
                         showQRCode(classId);
+                        // Crear la subcolección AttendanceCounts para la nueva clase
+                        initializeAttendanceCountsForClass(documentReference);
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -118,6 +121,30 @@ public class CrearClaseFragment extends Fragment {
                         Log.w(TAG, "Error creating class", e);
                         Toast.makeText(requireContext(), "Error creando clase", Toast.LENGTH_SHORT).show();
                     }
+                });
+    }
+
+    private void initializeAttendanceCountsForClass(DocumentReference classRef) {
+        // Inicializa la subcolección "AttendanceCounts" para la clase recién creada
+        CollectionReference attendanceCountsRef = classRef.collection("AttendanceCounts");
+
+        // Ejemplo: Añadir un documento de ejemplo en la subcolección con un contador inicial de 0
+        // Nota: Normalmente no se necesita agregar nada aquí a menos que tengas usuarios específicos
+        // a los que quieras inicializar inmediatamente. Aquí se muestra cómo hacerlo para un usuario
+        // específico si fuera necesario.
+
+        // Ejemplo de inicialización para el admin de la clase con contador en 0
+        String adminUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        Map<String, Object> initialCount = new HashMap<>();
+        initialCount.put("count", 0);
+
+        attendanceCountsRef.document(adminUserId)
+                .set(initialCount)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "Contador de asistencia inicializado para el admin: " + adminUserId);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error al inicializar el contador de asistencia para el admin", e);
                 });
     }
 
