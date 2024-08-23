@@ -123,7 +123,34 @@ public class QRScannerActivity extends AppCompatActivity {
                                     runOnUiThread(() ->
                                             Toast.makeText(QRScannerActivity.this, "Código de barras escaneado: " + barcodeText, Toast.LENGTH_SHORT).show()
                                     );
-                                    insertarAsistencia(barcodeText);
+                                    // Verificar en Firestore si el código de barras tiene un status "active"
+                                    firestore.collection("Sesion_Asistencia")
+                                            .document(barcodeText)
+                                            .get()
+                                            .addOnSuccessListener(documentSnapshot -> {
+                                                if (documentSnapshot.exists()) {
+                                                    String status = documentSnapshot.getString("status");
+                                                    if ("active".equals(status)) {
+                                                        insertarAsistencia(barcodeText);
+                                                    } else {
+                                                        Log.d("Barcode", "El status no es 'active'");
+                                                        runOnUiThread(() ->
+                                                                Toast.makeText(QRScannerActivity.this, "El status del código de barras no es 'active'", Toast.LENGTH_SHORT).show()
+                                                        );
+                                                    }
+                                                } else {
+                                                    Log.d("Barcode", "No se encontró la sesión de asistencia para este código de barras");
+                                                    runOnUiThread(() ->
+                                                            Toast.makeText(QRScannerActivity.this, "No se encontró la sesión de asistencia", Toast.LENGTH_SHORT).show()
+                                                    );
+                                                }
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                Log.e("Firestore", "Error al buscar la sesión de asistencia", e);
+                                                runOnUiThread(() ->
+                                                        Toast.makeText(QRScannerActivity.this, "Error al buscar la sesión de asistencia", Toast.LENGTH_SHORT).show()
+                                                );
+                                            });
                                 }
                             } else {
                                 Log.d("Barcode", "Código de barras repetido: " + barcode.rawValue);
