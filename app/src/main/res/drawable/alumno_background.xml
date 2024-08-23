@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle"
+            android:thickness="0dp">
+            <gradient
+                android:angle="45"
+                android:startColor="#B21D6BB4"
+                android:endColor="#E87CC1E6" />
+            <corners android:radius="13dp" />
+            <padding
+                android:left="6dp"
+                android:top="6dp"
+                android:right="6dp"
+                android:bottom="6dp" />
+            <elevation
+                android:elevation="4dp" />
+        </shape>
+    </item>
+
+
+
+    <item android:id="@android:id/background">
+        <ripple android:color="?android:attr/colorControlHighlight">
+            <item android:drawable="@color/TesoBlanco" />
+        </ripple>
+    </item>
+    <!-- Aquí se agrega el círculo decorativo -->
+    <item
+        android:gravity="bottom|end"
+        android:bottom="10dp"
+        android:right="10dp">
+        <shape android:shape="oval">
+            <size
+                android:width="30dp"
+                android:height="30dp"/>
+            <solid android:color="@color/TesoVerde2"/> <!-- Cambia el color según necesites -->
+        </shape>
+    </item>
+</layer-list>

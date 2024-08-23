@@ -1,6 +1,8 @@
 package com.example.tesoemcheckpoint_isc;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Dialog;
 import android.content.Intent;
@@ -8,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
@@ -17,12 +20,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
@@ -31,7 +37,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 
 public class ClassDetailsActivity extends AppCompatActivity {
@@ -41,6 +50,20 @@ public class ClassDetailsActivity extends AppCompatActivity {
     private TextView adminIdTextView;
     private TextView classIdTextView;
     private Button showQRCodeButton;
+
+    //Declaracion de iniciar sesion de asistencia
+    private Button startAttendanceButton;
+    private Button stopAttendanceButton;
+    private FirebaseFirestore db;
+    private Handler handler = new Handler();
+    private Runnable endSessionRunnable;
+    private String barcodeAsistencia;
+    private String tiempoServer;
+
+    // Declaración del RecyclerView y el AlumnoAdapter
+    private RecyclerView alumnosRecyclerView;
+    private AlumnoAdapter alumnoAdapter;
+    private List<AlumnoModel> alumnoList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +79,14 @@ public class ClassDetailsActivity extends AppCompatActivity {
         showQRCodeButton = findViewById(R.id.showQRCodeButton);
 
         // Instancia de FirebaseFirestore
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db = FirebaseFirestore.getInstance();
+
+        // Inicialización del RecyclerView y el AlumnoAdapter
+        alumnosRecyclerView = findViewById(R.id.alumnosRecyclerView);
+        alumnoAdapter = new AlumnoAdapter(alumnoList);
+        alumnosRecyclerView.setAdapter(alumnoAdapter);
+        alumnosRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
 
         // Obtención del modelo de clase desde el Intent
         Intent intent = getIntent();
@@ -94,7 +124,7 @@ public class ClassDetailsActivity extends AppCompatActivity {
         });
 
         //Obtener Codigo ID de la clase y mostrar el codigo.
-        String qrCode = classModel.getClassId();
+        //String qrCode = classModel.getClassId();
         showQRCodeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -102,18 +132,34 @@ public class ClassDetailsActivity extends AppCompatActivity {
                 showQRCode(classModel, qrCode);
             }
         });
+
+        //iniciar session de asistencia
+        startAttendanceButton = findViewById(R.id.startAttendanceButton);
+        startAttendanceButton.setVisibility(View.GONE);
+        startAttendanceButton.setOnClickListener(v -> startAttendanceSession(classModel));
+
     }
 
     /**
      * Muestra los detalles de la clase según el rol del usuario
      */
+
+    private boolean isAdmin(String userId, String classAdminId) {
+        return userId!= null && userId.equals(classAdminId);
+    }
     private void displayClassDetails(ClassModel classModel, String userRole, FirebaseFirestore db) {
+        Log.d("displayClassDetails", "EsDocente: " + userRole);
         if ("1".equals(userRole)) {
             // El usuario es profesor
             displayClassDetailsAsAdmin(classModel, db);
+            startAttendanceButton.setVisibility(View.VISIBLE);
+            // Cargar la lista de alumnos
+            loadAlumnos(classModel.getMembers());
         } else {
             // El usuario es estudiante
             displayClassDetailsAsStudent(classModel, db);
+            // Cargar la lista de alumnos
+            loadAlumnos(classModel.getMembers());
         }
     }
 
@@ -132,9 +178,20 @@ public class ClassDetailsActivity extends AppCompatActivity {
                             ClassModel classDetails = document.toObject(ClassModel.class);
                             classDetails.setClassId(classModel.getClassId()); // Populate the classId field
                             displayClassDetails(classDetails);
+
                             String adminId = classDetails.getAdminId();
-                            if (adminId!= null) {
+                            if (adminId != null) {
                                 fetchAdminName(adminId, db);
+                                // Verificar si el usuario actual es el admin
+                                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                                if (isAdmin(user.getUid(), adminId)) {
+                                    // Mostrar el botón para iniciar la sesión de asistencia
+                                    startAttendanceButton = findViewById(R.id.startAttendanceButton);
+                                    startAttendanceButton.setVisibility(View.VISIBLE);
+                                } else {
+                                    // Ocultar el botón si el usuario no es el admin
+                                    startAttendanceButton.setVisibility(View.GONE);
+                                }
                             } else {
                                 Log.d("ClassDetailsActivity", "Admin ID is null");
                             }
@@ -220,10 +277,72 @@ public class ClassDetailsActivity extends AppCompatActivity {
         showQRCodeDialog(classModel, qrCode);
     }
 
+    private void startAttendanceSession(ClassModel classModel) {
+        // Generar un código de barras único para la sesión que contiene el classId concatenado con una cadena random
+        barcodeAsistencia = UUID.randomUUID().toString().substring(0,8);
+
+        // Crear un nuevo documento en la colección "Sesion_Asistencia"
+        Map<String, Object> sessionData = new HashMap<>();
+        sessionData.put("classId", classModel.getClassId());
+        sessionData.put("startTime", FieldValue.serverTimestamp());
+        sessionData.put("status", "active");
+        sessionData.put("barcode", barcodeAsistencia);
+
+        db.collection("Sesion_Asistencia").document(barcodeAsistencia).set(sessionData)
+                .addOnSuccessListener(aVoid -> {
+                    // Mostrar el código de barras en un diálogo
+                    showBarcodeDialog(barcodeAsistencia);
+
+                    // Iniciar el temporizador para detener la sesión después de 15 minutos
+                    endSessionRunnable = this::stopAttendanceSession;
+                    handler.postDelayed(endSessionRunnable, 15 * 60 * 1000); // 15 minutos
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(ClassDetailsActivity.this, "Error al iniciar la sesión de asistencia", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void stopAttendanceSession() {
+        if (barcodeAsistencia == null) return;
+
+        // Actualizar el documento de la sesión de asistencia para marcarlo como inactivo
+        db.collection("Sesion_Asistencia").document(barcodeAsistencia)
+                .update("endTime", FieldValue.serverTimestamp(), "status", "inactive")
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(ClassDetailsActivity.this, "Sesión de asistencia detenida", Toast.LENGTH_SHORT).show();
+
+                    // Cancelar el temporizador si la sesión se detuvo manualmente
+                    handler.removeCallbacks(endSessionRunnable);
+                    barcodeAsistencia = null; // Reiniciar el sessionId para la próxima sesión
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(ClassDetailsActivity.this, "Error al detener la sesión de asistencia", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void showBarcodeDialog(String barcodeAsistencia) {
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_asistencia_barcode);
+
+        // Generar el código de barras con la cadena sessionId
+        Bitmap bitmap = generateBarcode(barcodeAsistencia);
+        ImageView qrCodeImage = dialog.findViewById(R.id.barcode_image);
+        qrCodeImage.setImageBitmap(bitmap);
+
+        dialog.show();
+
+        // Botón de descarga del código de barras
+        Button stopAttendanceButton = dialog.findViewById(R.id.stop_session_button);
+        Button downloadButton = dialog.findViewById(R.id.download_button);
+        stopAttendanceButton.setOnClickListener(v -> stopAttendanceSession());
+        downloadButton.setOnClickListener(v -> downloadBarcode(bitmap));
+    }
+
+
     private void showQRCodeDialog(ClassModel classModel, String qrCode) {
         // Crear el dialog box
         Dialog dialog = new Dialog(this);
-        dialog.setContentView(R.layout.dialog_qr_code);
+        dialog.setContentView(R.layout.dialog_qr_code);  // Asegúrate de que dialog_qr_code es el layout correcto
 
         // Generar el código QR con la cadena de texto classModel.getQrCode()
         String qrCodeText = classModel.getClassId();
@@ -231,7 +350,11 @@ public class ClassDetailsActivity extends AppCompatActivity {
 
         // Obtener la imagen del código QR
         ImageView qrCodeImage = dialog.findViewById(R.id.qr_code_image);
-        qrCodeImage.setImageBitmap(bitmap);
+        if (qrCodeImage != null) {
+            qrCodeImage.setImageBitmap(bitmap);
+        } else {
+            Log.e("QRCodeDialog", "ImageView qr_code_image not found in layout");
+        }
 
         // Mostrar el dialog box
         dialog.show();
@@ -246,6 +369,25 @@ public class ClassDetailsActivity extends AppCompatActivity {
             }
         });
     }
+
+    private Bitmap generateBarcode(String barcodeText) {
+        MultiFormatWriter writer = new MultiFormatWriter();
+        BitMatrix matrix;
+        try {
+            matrix = writer.encode(barcodeText, BarcodeFormat.CODE_128, 1200, 600);
+        } catch (WriterException e) {
+            Log.e("BarcodeGeneration", "Error generating barcode", e);
+            return null;
+        }
+        Bitmap bitmap = Bitmap.createBitmap(matrix.getWidth(), matrix.getHeight(), Bitmap.Config.ARGB_8888);
+        for (int x = 0; x < matrix.getWidth(); x++) {
+            for (int y = 0; y < matrix.getHeight(); y++) {
+                bitmap.setPixel(x, y, matrix.get(x, y) ? Color.BLACK : Color.WHITE);
+            }
+        }
+        return bitmap;
+    }
+
 
     private Bitmap generateQRCode(String qrCodeText) {
         // Utilizar la biblioteca ZXing para generar el código QR
@@ -280,4 +422,34 @@ public class ClassDetailsActivity extends AppCompatActivity {
         }
     }
 
+    private void downloadBarcode(Bitmap bitmap) {
+        File file = new File(getExternalCacheDir(), "bar_code.png");
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            fos.close();
+            Toast.makeText(this, "Código de barras descargado con éxito", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            Log.e("Error", "Error al descargar el código de barras", e);
+        }
+    }
+
+    private void loadAlumnos(List<Object> memberIds) {
+        for (Object memberId : memberIds) {
+            db.collection("Usuarios").document((String) memberId).get().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        String nombre = document.getString("Nombre");
+                        alumnoList.add(new AlumnoModel(nombre));
+                        alumnoAdapter.notifyDataSetChanged();
+                    } else {
+                        Log.d("ClassDetailsActivity", "No such document");
+                    }
+                } else {
+                    Log.d("ClassDetailsActivity", "get failed with ", task.getException());
+                }
+            });
+        }
+    }
 }

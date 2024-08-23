@@ -54,6 +54,7 @@ public class QRScannerActivity extends AppCompatActivity {
     private boolean qrCodeRead = false;
     private boolean isCooldownActive = false;
     private Handler handler = new Handler();
+    private String lastScannedBarcode = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,11 +67,11 @@ public class QRScannerActivity extends AppCompatActivity {
         surfaceView = findViewById(R.id.qr_surface_view);
 
         barcodeDetector = new BarcodeDetector.Builder(this)
-                .setBarcodeFormats(Barcode.QR_CODE)
+                .setBarcodeFormats(Barcode.ALL_FORMATS) //el programa puede leer ya sea codigos QR o de BARRA
                 .build();
 
         cameraSource = new CameraSource.Builder(this, barcodeDetector)
-                .setRequestedPreviewSize(640, 480)
+                .setRequestedPreviewSize(1280, 720)
                 .setFacing(CameraSource.CAMERA_FACING_BACK)
                 .setRequestedFps(30.0f)
                 .setAutoFocusEnabled(true)
@@ -104,26 +105,33 @@ public class QRScannerActivity extends AppCompatActivity {
             @Override
             public void receiveDetections(Detector.Detections<Barcode> detections) {
                 final SparseArray<Barcode> barcodes = detections.getDetectedItems();
-                if (barcodes.size()!= 0) {
+                if (barcodes.size() != 0) {
                     if (!isCooldownActive) {
                         isCooldownActive = true;
                         Barcode barcode = barcodes.valueAt(0);
-                        if (barcode!= null) {
-                            String qrCodeText = barcode.rawValue;
-                            Log.d("QRCode", "Código QR: " + qrCodeText);
-                            getQRCodeFromFirestore(qrCodeText);
-                            qrCodeRead = true; // Indicar que se ha leído un código QR
-
-                            // Verificar y registrar la asistencia
-                            verifyAndRegisterAttendance(qrCodeText);
-
-                            // Iniciar cooldown de 5 segundos
-                            handler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    isCooldownActive = false;
+                        if (barcode != null) {
+                            // Verificar si el código de barras ya ha sido escaneado
+                            if (!barcode.rawValue.equals(lastScannedBarcode)) {
+                                lastScannedBarcode = barcode.rawValue;
+                                if (barcode.format == Barcode.QR_CODE) {
+                                    String qrCodeText = barcode.rawValue;
+                                    Log.d("QRCode", "Código QR: " + qrCodeText);
+                                    getQRCodeFromFirestore(qrCodeText);
+                                } else if (barcode.format == Barcode.CODE_128) {
+                                    String barcodeText = barcode.rawValue;
+                                    Log.d("Barcode", "Código de barras: " + barcodeText);
+                                    runOnUiThread(() ->
+                                            Toast.makeText(QRScannerActivity.this, "Código de barras escaneado: " + barcodeText, Toast.LENGTH_SHORT).show()
+                                    );
+                                    insertarAsistencia(barcodeText);
                                 }
-                            }, 5000); // 5000 milisegundos = 5 segundos
+                            } else {
+                                Log.d("Barcode", "Código de barras repetido: " + barcode.rawValue);
+                            }
+                            // Iniciar cooldown de 5 segundos
+                            handler.postDelayed(() -> {
+                                isCooldownActive = false;
+                            }, 5000);
                         }
                     }
                 }
@@ -145,9 +153,7 @@ public class QRScannerActivity extends AppCompatActivity {
                     Log.d("Firestore", "Clase encontrada: " + className + " con ID: " + classId);
                     Log.d("Firestore", "Código QR: " + qrCode);
                     Log.d("Firestore", "User ID: " + mAuth.getCurrentUser().getUid());
-                    //insertDataIntoFirestore(mAuth.getCurrentUser().getUid(), classId); // Pasar el classId en lugar de qrCode
-                    // Agregar usuario a la clase y insertar en subcoleccion con contador de asistencia en 0
-                    addUserToClassAndInitializeAttendance(mAuth.getCurrentUser().getUid(), classId);
+                    insertDataIntoFirestore(mAuth.getCurrentUser().getUid(), classId); // Pasar el classId en lugar de qrCode
                 } else {
                     Log.e("Error", "No se encontró una clase asociada al código QR");
                     textViewResult.setText("No se encontró una clase asociada al código QR");
@@ -213,183 +219,63 @@ public class QRScannerActivity extends AppCompatActivity {
         });
     }
 
-    // Nuevo codigo para insertar usuario
-    private void addUserToClassAndInitializeAttendance(String userUid, String classId) {
-        // Obtener la referencia al documento de la clase
-        DocumentReference classRef = firestore.collection("Clases").document(classId);
+    private void insertarAsistencia(String barcodeText) {
+        // Obtener el classId a partir del barcodeText en la colección "Sesion_Asistencia"
+        CollectionReference sesionAsistenciaRef = firestore.collection("Sesion_Asistencia");
+        Query query = sesionAsistenciaRef.whereEqualTo(FieldPath.documentId(), barcodeText);
 
-        // Agregar el usuario a la clase y crear/actualizar el contador de asistencia
-        classRef.get().addOnCompleteListener(task -> {
+        query.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                DocumentSnapshot documentSnapshot = task.getResult();
-                if (documentSnapshot.exists()) {
-                    Map<String, Object> data = documentSnapshot.getData();
-                    if (data.containsKey("members")) {
-                        ArrayList<String> members = (ArrayList<String>) data.get("members");
-                        if (members.contains(userUid)) {
-                            // El usuario ya es parte de la clase, sólo actualizamos el contador de asistencia
-                            Toast.makeText(QRScannerActivity.this, "El usuario ya es parte de la clase", Toast.LENGTH_SHORT).show();
-                        } else {
-                            // Agregar el usuario a la lista de miembros y actualizar Firestore
-                            members.add(userUid);
-                            data.put("members", members);
-                            classRef.update(data).addOnCompleteListener(taskUpdate -> {
-                                if (taskUpdate.isSuccessful()) {
-                                    Toast.makeText(QRScannerActivity.this, "Usuario agregado a la clase", Toast.LENGTH_SHORT).show();
-                                    initializeAttendanceCount(classRef, userUid);
+                QuerySnapshot querySnapshot = task.getResult();
+                if (querySnapshot != null && !querySnapshot.isEmpty()) {
+                    DocumentSnapshot documentSnapshot = querySnapshot.getDocuments().get(0);
+                    String classIdAsistencia = documentSnapshot.getString("classId");
+
+                    if (classIdAsistencia != null) {
+                        // Verificar si ya existe un documento en "Control_Asistencia" con el mismo classId y userId
+                        CollectionReference controlAsistenciaRef = firestore.collection("Control_Asistencia");
+                        Query asistenciaQuery = controlAsistenciaRef
+                                .whereEqualTo("classId", classIdAsistencia)
+                                .whereEqualTo("userId", mAuth.getCurrentUser().getUid());
+
+                        asistenciaQuery.get().addOnCompleteListener(asistenciaTask -> {
+                            if (asistenciaTask.isSuccessful()) {
+                                QuerySnapshot asistenciaSnapshot = asistenciaTask.getResult();
+                                if (asistenciaSnapshot != null && !asistenciaSnapshot.isEmpty()) {
+                                    // Documento encontrado, incrementar el contador de asistencias
+                                    DocumentSnapshot asistenciaDoc = asistenciaSnapshot.getDocuments().get(0);
+                                    String asistenciaDocId = asistenciaDoc.getId();
+                                    int currentAsistencias = asistenciaDoc.getLong("asistencias").intValue();
+                                    controlAsistenciaRef.document(asistenciaDocId)
+                                            .update("asistencias", currentAsistencias + 1)
+                                            .addOnSuccessListener(aVoid -> Log.d("Firestore", "Asistencia actualizada"))
+                                            .addOnFailureListener(e -> Log.e("Firestore", "Error al actualizar asistencia", e));
                                 } else {
-                                    Toast.makeText(QRScannerActivity.this, "Error al agregar usuario a la clase", Toast.LENGTH_SHORT).show();
+                                    // No existe documento, crear uno nuevo
+                                    Map<String, Object> asistenciaData = new HashMap<>();
+                                    asistenciaData.put("classId", classIdAsistencia);
+                                    asistenciaData.put("userId", mAuth.getCurrentUser().getUid());
+                                    asistenciaData.put("asistencias", 1);
+
+                                    controlAsistenciaRef.add(asistenciaData)
+                                            .addOnSuccessListener(documentReference -> Log.d("Firestore", "Asistencia registrada"))
+                                            .addOnFailureListener(e -> Log.e("Firestore", "Error al registrar asistencia", e));
                                 }
-                            });
-                        }
-                    } else {
-                        // No hay miembros, inicializamos la lista de miembros
-                        ArrayList<String> members = new ArrayList<>();
-                        members.add(userUid);
-                        data.put("members", members);
-                        classRef.update(data).addOnCompleteListener(taskUpdate -> {
-                            if (taskUpdate.isSuccessful()) {
-                                Toast.makeText(QRScannerActivity.this, "Usuario agregado a la clase", Toast.LENGTH_SHORT).show();
-                                initializeAttendanceCount(classRef, userUid);
                             } else {
-                                Toast.makeText(QRScannerActivity.this, "Error al agregar usuario a la clase", Toast.LENGTH_SHORT).show();
+                                Log.e("Firestore", "Error al verificar asistencia", asistenciaTask.getException());
                             }
                         });
+                    } else {
+                        Log.e("Firestore", "classId no encontrado en el documento de Sesion_Asistencia");
                     }
                 } else {
-                    Toast.makeText(QRScannerActivity.this, "No se encontró la clase", Toast.LENGTH_SHORT).show();
+                    Log.e("Firestore", "No se encontró un documento en Sesion_Asistencia para el código de barras");
                 }
             } else {
-                Toast.makeText(QRScannerActivity.this, "Error al obtener la clase", Toast.LENGTH_SHORT).show();
+                Log.e("Firestore", "Error al obtener el documento de Sesion_Asistencia", task.getException());
             }
         });
     }
 
-    private void initializeAttendanceCount(DocumentReference classRef, String userUid) {
-        // Crear o actualizar el documento en la subcolección "AttendanceCounts" con el contador inicial
-        CollectionReference attendanceCountsRef = classRef.collection("AttendanceCounts");
-        DocumentReference userAttendanceRef = attendanceCountsRef.document(userUid);
 
-        userAttendanceRef.get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                DocumentSnapshot documentSnapshot = task.getResult();
-                if (!documentSnapshot.exists()) {
-                    // El documento no existe, crear un nuevo documento con el contador inicial
-                    Map<String, Object> initialData = new HashMap<>();
-                    initialData.put("count", 0);  // Inicializamos el contador en 0
-                    userAttendanceRef.set(initialData).addOnCompleteListener(taskSet -> {
-                        if (taskSet.isSuccessful()) {
-                            Log.d("Firestore", "Contador de asistencia inicializado para el usuario: " + userUid);
-                        } else {
-                            Log.e("Firestore", "Error al inicializar el contador de asistencia", taskSet.getException());
-                        }
-                    });
-                }
-            } else {
-                Log.e("Firestore", "Error al verificar el documento de asistencia del usuario", task.getException());
-            }
-        });
-    }
-
-    private void verifyAndRegisterAttendance(String sessionId) {
-        String userId = mAuth.getCurrentUser().getUid();
-
-        // Buscar la sesión de asistencia en Firestore
-        firestore.collection("Sesion_Asistencia").document(sessionId)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists() && "active".equals(documentSnapshot.getString("status"))) {
-                        String classId = documentSnapshot.getString("classId");
-                        if (classId != null) {
-                            // Registrar la asistencia
-                            registerAttendance(sessionId, userId, classId);
-                        }
-                    } else {
-                        showToast("Sesión de asistencia no válida o ya cerrada");
-                        qrCodeRead = false;
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    showToast("Error al verificar la sesión de asistencia");
-                    qrCodeRead = false;
-                });
-    }
-
-    private void registerAttendance(String sessionId, String userId, String classId) {
-        Map<String, Object> attendanceData = new HashMap<>();
-        attendanceData.put("sessionId", sessionId);
-        attendanceData.put("studentId", userId);
-        attendanceData.put("timestamp", FieldValue.serverTimestamp());
-
-        // Verificar si el usuario ya ha registrado su asistencia para esta sesión
-        firestore.collection("Asistencias")
-                .whereEqualTo("sessionId", sessionId)
-                .whereEqualTo("studentId", userId)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        if (task.getResult().isEmpty()) {
-                            // No se ha registrado asistencia antes, registrar ahora
-                            firestore.collection("Asistencias").add(attendanceData)
-                                    .addOnSuccessListener(documentReference -> {
-                                        showToast("Asistencia registrada con éxito");
-                                        qrCodeRead = false;
-                                        // Actualizar el contador de asistencia
-                                        updateAttendanceCount(classId, userId);
-                                        // Activar un cooldown para evitar lecturas repetidas
-                                        activateCooldown();
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        showToast("Error al registrar la asistencia");
-                                        qrCodeRead = false;
-                                    });
-                        } else {
-                            showToast("Ya has registrado tu asistencia para esta sesión");
-                            qrCodeRead = false;
-                        }
-                    } else {
-                        showToast("Error al verificar la asistencia");
-                        qrCodeRead = false;
-                    }
-                });
-    }
-
-    private void updateAttendanceCount(String classId, String userId) {
-        DocumentReference attendanceCountRef = firestore.collection("Clases")
-                .document(classId)
-                .collection("AttendanceCounts")
-                .document(userId);
-
-        firestore.runTransaction((Transaction.Function<Void>) transaction -> {
-            DocumentSnapshot snapshot = transaction.get(attendanceCountRef);
-            long newCount = 1;
-            if (snapshot.exists()) {
-                Long currentCount = snapshot.getLong("count");
-                if (currentCount != null) {
-                    newCount = currentCount + 1;
-                }
-            }
-            transaction.set(attendanceCountRef, Collections.singletonMap("count", newCount), SetOptions.merge());
-            return null;
-        }).addOnSuccessListener(aVoid -> {
-            Log.d("QRScannerActivity", "Contador de asistencia actualizado correctamente");
-        }).addOnFailureListener(e -> {
-            Log.e("QRScannerActivity", "Error al actualizar el contador de asistencia", e);
-        });
-    }
-
-    private void activateCooldown() {
-        isCooldownActive = true;
-        handler.postDelayed(() -> isCooldownActive = false, 5000); // Cooldown de 5 segundos
-    }
-
-    private void showToast(String message) {
-        runOnUiThread(() -> Toast.makeText(QRScannerActivity.this, message, Toast.LENGTH_SHORT).show());
-    }
-
-    private void handleError() {
-        // Maneja el error aquí
-        Log.e("Error", "Error al obtener la clase");
-        textViewResult.setText("Error al obtener la clase");
-    }
 }
