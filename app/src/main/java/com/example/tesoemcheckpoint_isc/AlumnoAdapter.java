@@ -18,6 +18,7 @@ public class AlumnoAdapter extends RecyclerView.Adapter<AlumnoAdapter.AlumnoView
     public AlumnoAdapter(List<AlumnoModel> alumnoList) {
         this.alumnoList = alumnoList;
     }
+
     @NonNull
     @Override
     public AlumnoViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -29,6 +30,7 @@ public class AlumnoAdapter extends RecyclerView.Adapter<AlumnoAdapter.AlumnoView
     public void onBindViewHolder(@NonNull AlumnoViewHolder holder, int position) {
         AlumnoModel currentAlumno = alumnoList.get(position);
         holder.alumnoName.setText(currentAlumno.getNombre());
+        holder.asistenciasTextView.setText(String.valueOf(currentAlumno.getAsistencias())); // Mostrar el número de asistencias
     }
 
     @Override
@@ -37,12 +39,13 @@ public class AlumnoAdapter extends RecyclerView.Adapter<AlumnoAdapter.AlumnoView
     }
 
     public static class AlumnoViewHolder extends RecyclerView.ViewHolder {
-
         public TextView alumnoName;
+        public TextView asistenciasTextView; // Nuevo TextView para mostrar las asistencias
 
         public AlumnoViewHolder(View itemView) {
             super(itemView);
             alumnoName = itemView.findViewById(R.id.alumno_name);
+            asistenciasTextView = itemView.findViewById(R.id.asistencia_count);
         }
     }
 }

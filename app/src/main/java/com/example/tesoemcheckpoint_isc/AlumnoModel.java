@@ -7,11 +7,13 @@ import java.io.Serializable;
 
 public class AlumnoModel implements Serializable {
     private String nombre;
+    private int asistencias; // Nuevo campo para las asistencias
 
     public AlumnoModel() {}
 
-    public AlumnoModel(String nombre) {
+    public AlumnoModel(String nombre, int asistencias) {
         this.nombre = nombre;
+        this.asistencias = asistencias;
     }
 
     public String getNombre() {
@@ -22,4 +24,11 @@ public class AlumnoModel implements Serializable {
         this.nombre = nombre;
     }
 
+    public int getAsistencias() {
+        return asistencias;
+    }
+
+    public void setAsistencias(int asistencias) {
+        this.asistencias = asistencias;
+    }
 }

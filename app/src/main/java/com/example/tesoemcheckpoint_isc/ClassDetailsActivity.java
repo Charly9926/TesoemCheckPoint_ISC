@@ -145,8 +145,9 @@ public class ClassDetailsActivity extends AppCompatActivity {
      */
 
     private boolean isAdmin(String userId, String classAdminId) {
-        return userId!= null && userId.equals(classAdminId);
+        return userId != null && userId.equals(classAdminId);
     }
+
     private void displayClassDetails(ClassModel classModel, String userRole, FirebaseFirestore db) {
         Log.d("displayClassDetails", "EsDocente: " + userRole);
         if ("1".equals(userRole)) {
@@ -154,12 +155,12 @@ public class ClassDetailsActivity extends AppCompatActivity {
             displayClassDetailsAsAdmin(classModel, db);
             startAttendanceButton.setVisibility(View.VISIBLE);
             // Cargar la lista de alumnos
-            loadAlumnos(classModel.getMembers());
+            loadAlumnos(classModel.getMembers(), classModel);
         } else {
             // El usuario es estudiante
             displayClassDetailsAsStudent(classModel, db);
             // Cargar la lista de alumnos
-            loadAlumnos(classModel.getMembers());
+            loadAlumnos(classModel.getMembers(), classModel);
         }
     }
 
@@ -223,7 +224,7 @@ public class ClassDetailsActivity extends AppCompatActivity {
                                 classDetails.setClassId(classModel.getClassId()); // Populate the classId field
                                 classDetails.setAdminId(adminId); // Populate the adminId field
                                 displayClassDetails(classDetails);
-                                if (adminId!= null) {
+                                if (adminId != null) {
                                     fetchAdminName(adminId, db);
                                 } else {
                                     Log.d("ClassDetailsActivity", "Admin ID is null");
@@ -279,7 +280,7 @@ public class ClassDetailsActivity extends AppCompatActivity {
 
     private void startAttendanceSession(ClassModel classModel) {
         // Generar un código de barras único para la sesión que contiene el classId concatenado con una cadena random
-        barcodeAsistencia = UUID.randomUUID().toString().substring(0,8);
+        barcodeAsistencia = UUID.randomUUID().toString().substring(0, 8);
 
         // Crear un nuevo documento en la colección "Sesion_Asistencia"
         Map<String, Object> sessionData = new HashMap<>();
@@ -403,7 +404,7 @@ public class ClassDetailsActivity extends AppCompatActivity {
         Bitmap bitmap = Bitmap.createBitmap(matrix.getWidth(), matrix.getHeight(), Bitmap.Config.ARGB_8888);
         for (int x = 0; x < matrix.getWidth(); x++) {
             for (int y = 0; y < matrix.getHeight(); y++) {
-                bitmap.setPixel(x, y, matrix.get(x, y)? Color.BLACK : Color.WHITE);
+                bitmap.setPixel(x, y, matrix.get(x, y) ? Color.BLACK : Color.WHITE);
             }
         }
         return bitmap;
@@ -434,15 +435,33 @@ public class ClassDetailsActivity extends AppCompatActivity {
         }
     }
 
-    private void loadAlumnos(List<Object> memberIds) {
+    private void loadAlumnos(List<Object> memberIds, ClassModel classModel) {
         for (Object memberId : memberIds) {
             db.collection("Usuarios").document((String) memberId).get().addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     DocumentSnapshot document = task.getResult();
                     if (document.exists()) {
                         String nombre = document.getString("Nombre");
-                        alumnoList.add(new AlumnoModel(nombre));
-                        alumnoAdapter.notifyDataSetChanged();
+                        // Obtener el contador de asistencia para este alumno
+                        db.collection("Control_Asistencia")
+                                .whereEqualTo("userId", memberId)
+                                .whereEqualTo("classId", classModel.getClassId())
+                                .get()
+                                .addOnCompleteListener(assistTask -> {
+                                    if (assistTask.isSuccessful()) {
+                                        int asistencias = 0;
+                                        if (!assistTask.getResult().isEmpty()) {
+                                            DocumentSnapshot assistDoc = assistTask.getResult().getDocuments().get(0);
+                                            asistencias = assistDoc.getLong("asistencias").intValue();
+                                        }
+
+                                        AlumnoModel alumno = new AlumnoModel(nombre, asistencias);
+                                        alumnoList.add(alumno);  // Agrega el alumno con el contador de asistencias
+                                        alumnoAdapter.notifyDataSetChanged();  // Notifica al adaptador de los cambios
+                                    } else {
+                                        Log.d("ClassDetailsActivity", "Error fetching asistencia data", assistTask.getException());
+                                    }
+                                });
                     } else {
                         Log.d("ClassDetailsActivity", "No such document");
                     }
