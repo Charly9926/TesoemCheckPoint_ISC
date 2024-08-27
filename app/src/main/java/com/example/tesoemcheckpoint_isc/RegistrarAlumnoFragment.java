@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 
 import com.example.tesoemcheckpoint_isc.databinding.ActivityDocenteDashboardBinding;
@@ -46,6 +47,7 @@ public class RegistrarAlumnoFragment extends Fragment {
     FirebaseFirestore firebaseFirestore;
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         View view = inflater.inflate(R.layout.fragment_registrar_alumno, container, false);
 
         // Inicializar vistas

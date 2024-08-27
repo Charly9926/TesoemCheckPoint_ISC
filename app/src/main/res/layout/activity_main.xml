@@ -10,11 +10,11 @@
 
     <ImageView
         android:id="@+id/logoTeso"
-        android:layout_width="315dp"
+        android:layout_width="338dp"
         android:layout_height="405dp"
-        android:layout_marginLeft="36dp"
+        android:layout_marginStart="36dp"
         android:layout_marginTop="14dp"
-        android:layout_marginRight="16dp"
+        android:layout_marginEnd="16dp"
         android:layout_weight="0"
         android:clipToOutline="true"
         android:scaleX="1.6"

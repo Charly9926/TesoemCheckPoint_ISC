@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="guardar_cambios">Guardar cambios</string>
+    <string name="eliminar_clase">Eliminar clase</string>
+    <string name="nuevo_nombre_de_la_clase_hint">Nuevo nombre de la clase</string>
+</resources>
