@@ -1,5 +1,6 @@
 package com.example.tesoemcheckpoint_isc;
 
+import android.app.Dialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -31,6 +32,9 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -78,8 +82,7 @@ public class CrearClaseFragment extends Fragment {
                 if (classId == null || classId.isEmpty()) {
                     Toast.makeText(requireContext(), "No hay código QR para mostrar", Toast.LENGTH_SHORT).show();
                 } else {
-                    String qrCode = qr_code_image.getTag().toString();
-                    showQRCode(qrCode);
+                    showQRCodeDialog(classId);
                 }
             }
         });
@@ -89,17 +92,13 @@ public class CrearClaseFragment extends Fragment {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         String userId = user.getUid();
 
-        // Generate QR code
-        String qrCode = generateQRCode(userId + ";" + nombreClase);
-
-        // Create class data as a HashMap
+        // Crear datos de la clase
         Map<String, Object> classData = new HashMap<>();
         classData.put("className", nombreClase);
         classData.put("admin", userId);
         classData.put("members", new ArrayList<>());
-        classData.put("qrCode", qrCode);
 
-        // Add class to Firestore
+        // Agregar la clase a Firestore
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("Clases")
                 .add(classData)
@@ -109,78 +108,77 @@ public class CrearClaseFragment extends Fragment {
                         classId = documentReference.getId();
                         Log.d(TAG, "Clase creada con ID: " + classId);
                         Toast.makeText(requireContext(), "Clase creada exitosamente", Toast.LENGTH_SHORT).show();
-                        qr_code_image.setTag(qrCode); // Save the QR code for later use
-                        showQRCode(classId);
-                        // Crear la subcolección AttendanceCounts para la nueva clase
-                        initializeAttendanceCountsForClass(documentReference);
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "Error creating class", e);
+                        Log.w(TAG, "Error creando clase", e);
                         Toast.makeText(requireContext(), "Error creando clase", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
 
-    private void initializeAttendanceCountsForClass(DocumentReference classRef) {
-        // Inicializa la subcolección "AttendanceCounts" para la clase recién creada
-        CollectionReference attendanceCountsRef = classRef.collection("AttendanceCounts");
+    private void showQRCodeDialog(String qrCodeText) {
+        // Crear el dialog box
+        Dialog dialog = new Dialog(requireContext());
+        dialog.setContentView(R.layout.dialog_qr_code);  // Asegúrate de que dialog_qr_code es el layout correcto
 
-        // Ejemplo: Añadir un documento de ejemplo en la subcolección con un contador inicial de 0
-        // Nota: Normalmente no se necesita agregar nada aquí a menos que tengas usuarios específicos
-        // a los que quieras inicializar inmediatamente. Aquí se muestra cómo hacerlo para un usuario
-        // específico si fuera necesario.
+        // Generar el código QR con la cadena de texto
+        Bitmap bitmap = generateQRCode(qrCodeText);
 
-        // Ejemplo de inicialización para el admin de la clase con contador en 0
-        String adminUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        Map<String, Object> initialCount = new HashMap<>();
-        initialCount.put("count", 0);
-
-        attendanceCountsRef.document(adminUserId)
-                .set(initialCount)
-                .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "Contador de asistencia inicializado para el admin: " + adminUserId);
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error al inicializar el contador de asistencia para el admin", e);
-                });
-    }
-
-    private void showQRCode(String qrCode) {
-        Bitmap bitmap = decodeBase64ToBitmap(qrCode);
-        qr_code_image.setImageBitmap(bitmap);
-    }
-
-    private Bitmap decodeBase64ToBitmap(String base64String) {
-        byte[] decodedString = Base64.decode(base64String, Base64.DEFAULT);
-        return BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-    }
-
-    private String generateQRCode(String data) {
-        QRCodeWriter writer = new QRCodeWriter();
-        try {
-            BitMatrix bitMatrix = writer.encode(data, BarcodeFormat.QR_CODE, 512, 512);
-            int width = bitMatrix.getWidth();
-            int height = bitMatrix.getHeight();
-            Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-            for (int x = 0; x < width; x++) {
-                for (int y = 0; y < height; y++) {
-                    bmp.setPixel(x, y, bitMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
-                }
-            }
-            return encodeAsBase64String(bmp); // Convert Bitmap to Base64 string
-        } catch (WriterException e) {
-            e.printStackTrace();
+        // Obtener la imagen del código QR
+        ImageView qrCodeImage = dialog.findViewById(R.id.qr_code_image);
+        if (qrCodeImage != null) {
+            qrCodeImage.setImageBitmap(bitmap);
+        } else {
+            Log.e("QRCodeDialog", "ImageView qr_code_image not found in layout");
         }
-        return null;
+
+        // Mostrar el dialog box
+        dialog.show();
+
+        // Agregar listener al botón de descargar
+        Button downloadButton = dialog.findViewById(R.id.download_button);
+        downloadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Descargar la imagen del código QR
+                downloadQRCode(bitmap);
+            }
+        });
     }
 
-    private String encodeAsBase64String(Bitmap bitmap) {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-        byte[] byteArray = byteArrayOutputStream.toByteArray();
-        return Base64.encodeToString(byteArray, Base64.DEFAULT);
+    private Bitmap generateQRCode(String qrCodeText) {
+        // Utilizar la biblioteca ZXing para generar el código QR
+        QRCodeWriter writer = new QRCodeWriter();
+        BitMatrix matrix;
+        try {
+            matrix = writer.encode(qrCodeText, BarcodeFormat.QR_CODE, 600, 600);
+        } catch (WriterException e) {
+            // Manejar la excepción, por ejemplo, registrando un mensaje de error
+            Log.e("QRCodeGeneration", "Error generating QR code", e);
+            return null; // o algún bitmap por defecto
+        }
+        Bitmap bitmap = Bitmap.createBitmap(matrix.getWidth(), matrix.getHeight(), Bitmap.Config.ARGB_8888);
+        for (int x = 0; x < matrix.getWidth(); x++) {
+            for (int y = 0; y < matrix.getHeight(); y++) {
+                bitmap.setPixel(x, y, matrix.get(x, y) ? Color.BLACK : Color.WHITE);
+            }
+        }
+        return bitmap;
+    }
+
+    private void downloadQRCode(Bitmap bitmap) {
+        // Crear el archivo en el directorio externo
+        File file = new File(requireContext().getExternalCacheDir(), "qr_code.png");
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            fos.close();
+            Toast.makeText(requireContext(), "Código QR descargado con éxito", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            Log.e("Error", "Error al descargar el código QR", e);
+        }
     }
 }

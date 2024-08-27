@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,6 +51,8 @@ public class ClassDetailsActivity extends AppCompatActivity {
     private TextView adminIdTextView;
     private TextView classIdTextView;
     private Button showQRCodeButton;
+    private Button editarClaseButton;
+
 
     //Declaracion de iniciar sesion de asistencia
     private Button startAttendanceButton;
@@ -74,10 +77,9 @@ public class ClassDetailsActivity extends AppCompatActivity {
         classNameTextView = findViewById(R.id.classNameTextView);
         membersCountTextView = findViewById(R.id.membersCountTextView);
         adminIdTextView = findViewById(R.id.adminIdTextView);
-        classIdTextView = findViewById(R.id.classIdTextView);
+        //classIdTextView = findViewById(R.id.classIdTextView);
         //Botones
         showQRCodeButton = findViewById(R.id.showQRCodeButton);
-
         // Instancia de FirebaseFirestore
         db = FirebaseFirestore.getInstance();
 
@@ -138,6 +140,20 @@ public class ClassDetailsActivity extends AppCompatActivity {
         startAttendanceButton.setVisibility(View.GONE);
         startAttendanceButton.setOnClickListener(v -> startAttendanceSession(classModel));
 
+        //Editar Clase
+        editarClaseButton = findViewById(R.id.editarClaseButton);
+        editarClaseButton.setVisibility(View.GONE);
+        // Botón de editar clase
+        editarClaseButton.setOnClickListener(v -> {
+            // Crear un nuevo Intent para EditarClaseActivity
+            Intent editarClaseIntent = new Intent(ClassDetailsActivity.this, EditarClaseActivity.class);
+
+            // Pasar el classId al Intent
+            editarClaseIntent.putExtra("classId", classModel.getClassId());
+
+            // Iniciar la actividad EditarClaseActivity
+            startActivity(editarClaseIntent);
+        });
     }
 
     /**
@@ -154,6 +170,7 @@ public class ClassDetailsActivity extends AppCompatActivity {
             // El usuario es profesor
             displayClassDetailsAsAdmin(classModel, db);
             startAttendanceButton.setVisibility(View.VISIBLE);
+            editarClaseButton.setVisibility(View.VISIBLE);
             // Cargar la lista de alumnos
             loadAlumnos(classModel.getMembers(), classModel);
         } else {
@@ -246,8 +263,8 @@ public class ClassDetailsActivity extends AppCompatActivity {
      */
     private void displayClassDetails(ClassModel classModel) {
         classNameTextView.setText(classModel.getClassName());
-        membersCountTextView.setText("Members Count: " + classModel.getMembersCount());
-        classIdTextView.setText("Class ID: " + classModel.getClassId());
+        membersCountTextView.setText("Numero de alumnos: " + classModel.getMembersCount());
+        //classIdTextView.setText("Class ID: " + classModel.getClassId());
     }
 
     /**
@@ -263,7 +280,7 @@ public class ClassDetailsActivity extends AppCompatActivity {
                         DocumentSnapshot adminDoc = task.getResult();
                         if (adminDoc.exists()) {
                             String adminName = adminDoc.getString("Nombre");
-                            adminIdTextView.setText("Profesor: " + adminName + " (ID: " + adminId + ")");
+                            adminIdTextView.setText("Profesor: " + adminName); //+ " (ID: " + adminId + ")"
                         } else {
                             Log.d("ClassDetailsActivity", "No admin found with ID " + adminId);
                         }
@@ -395,7 +412,7 @@ public class ClassDetailsActivity extends AppCompatActivity {
         QRCodeWriter writer = new QRCodeWriter();
         BitMatrix matrix;
         try {
-            matrix = writer.encode(qrCodeText, BarcodeFormat.QR_CODE, 200, 200);
+            matrix = writer.encode(qrCodeText, BarcodeFormat.QR_CODE, 600, 600);
         } catch (WriterException e) {
             // Handle the exception, for example, by logging an error message
             Log.e("QRCodeGeneration", "Error generating QR code", e);

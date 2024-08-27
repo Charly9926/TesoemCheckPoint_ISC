@@ -7,37 +7,61 @@
     android:layout_height="match_parent"
     tools:context=".CrearClaseFragment">
 
+    <!-- Título -->
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="322dp"
+        android:layout_height="55dp"
+        android:layout_marginTop="32dp"
+        android:text="Crear clase"
+        android:textAlignment="center"
+        android:textSize="44sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:textColor="@android:color/black"
+        android:fontFamily="sans-serif-medium"/>
+
     <EditText
         android:id="@+id/class_name_input"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="336dp"
+        android:layout_width="367dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="104dp"
         android:hint="Nombre de la clase"
+        android:padding="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.384"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/title" />
 
     <Button
         android:id="@+id/create_class_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginStart="128dp"
-        android:layout_marginTop="68dp"
+        android:layout_width="260dp"
+        android:layout_height="65dp"
+        android:layout_marginTop="48dp"
+        android:padding="16dp"
         android:text="Crear clase"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/class_name_input" />
 
     <Button
         android:id="@+id/show_qr_code_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="260dp"
+        android:layout_height="65dp"
+        android:layout_marginBottom="96dp"
+        android:backgroundTint="@color/TesoAzul"
+        android:padding="16dp"
         android:text="@string/mostrarQR"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.503"
+        app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/create_class_button"
-        app:layout_constraintVertical_bias="0.683" />
+        app:layout_constraintVertical_bias="0.087" />
 
     <ImageView
         android:id="@+id/qr_code_image"
@@ -47,6 +71,5 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/create_class_button" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

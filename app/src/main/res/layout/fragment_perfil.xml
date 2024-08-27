@@ -1,14 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".PerfilFragment">
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="?android:attr/windowBackground">
 
-    <!-- TODO: Update blank fragment layout -->
+    <!-- Título -->
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Información del perfil"
+        android:textSize="34sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"
+        android:textColor="@android:color/black"
+        android:fontFamily="sans-serif-medium"/>
 
-</FrameLayout>
+    <!-- CardView para contener la información del usuario -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_marginTop="100dp"
+        android:elevation="49dp"
+        android:padding="16dp">
+
+
+        <!-- Información del usuario -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/textViewNombre"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nombre"
+                android:textSize="24sp"
+                android:textColor="@android:color/black"
+                android:fontFamily="sans-serif-medium" />
+
+            <TextView
+                android:id="@+id/textViewUserId"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="User ID"
+                android:textSize="16sp"
+                android:textColor="@android:color/darker_gray"
+                android:layout_marginTop="8dp" />
+
+            <TextView
+                android:id="@+id/textViewDocenteStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Status"
+                android:textSize="18sp"
+                android:textColor="@android:color/black"
+                android:layout_marginTop="8dp" />
+
+            <TextView
+                android:id="@+id/textViewCorreo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Correo"
+                android:textSize="18sp"
+                android:textColor="@android:color/black"
+                android:layout_marginTop="8dp" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- Botón de eliminar usuario -->
+    <Button
+        android:id="@+id/eliminarUsuarioButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="#CC4347"
+        android:padding="16dp"
+        android:text="Eliminar Usuario"
+        android:textColor="@android:color/white"
+        android:textSize="18sp" />
+
+</LinearLayout>
