@@ -29,6 +29,7 @@
     <string name="guardar_cambios">Guardar cambios</string>
     <string name="eliminar_clase">Eliminar clase</string>
     <string name="nuevo_nombre_de_la_clase_hint">Nuevo nombre de la clase</string>
+    <string name="olvidaste_tu_contrase">¿Olvidaste tu contraseña?</string>
 
 
 </resources>

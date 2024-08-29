@@ -65,6 +65,7 @@ dependencies {
     implementation ("androidx.camera:camera-camera2:1.3.3")
     implementation ("androidx.camera:camera-view:1.4.0-alpha05")
     implementation ("com.google.android.gms:play-services-vision:20.1.3")
+    implementation ("com.opencsv:opencsv:5.5.2")
 
 
 }

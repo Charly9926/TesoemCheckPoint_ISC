@@ -2,6 +2,7 @@ package com.example.tesoemcheckpoint_isc;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -10,6 +11,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Base64;
@@ -21,6 +23,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.caverock.androidsvg.BuildConfig;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -28,19 +31,25 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+import com.opencsv.CSVWriter;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -53,6 +62,7 @@ public class ClassDetailsActivity extends AppCompatActivity {
     private TextView classIdTextView;
     private Button showQRCodeButton;
     private Button editarClaseButton;
+    private Button exportCsvButton;
 
 
     //Declaracion de iniciar sesion de asistencia
@@ -142,6 +152,12 @@ public class ClassDetailsActivity extends AppCompatActivity {
         startAttendanceButton.setVisibility(View.GONE);
         startAttendanceButton.setOnClickListener(v -> startAttendanceSession(classModel));
 
+        // Inicialización del botón de exportar en CSV
+        exportCsvButton = findViewById(R.id.exportCsvButton);
+        exportCsvButton.setVisibility(View.GONE);
+        // Configuración del botón para exportar en CSV
+        exportCsvButton.setOnClickListener(v -> exportarAsistenciaEnCSV());
+
         //Editar Clase
         editarClaseButton = findViewById(R.id.editarClaseButton);
         editarClaseButton.setVisibility(View.GONE);
@@ -173,6 +189,7 @@ public class ClassDetailsActivity extends AppCompatActivity {
             displayClassDetailsAsAdmin(classModel, db);
             startAttendanceButton.setVisibility(View.VISIBLE);
             editarClaseButton.setVisibility(View.VISIBLE);
+            exportCsvButton.setVisibility(View.VISIBLE);
             // Cargar la lista de alumnos
             loadAlumnos(classModel.getMembers(), classModel);
         } else {
@@ -490,4 +507,64 @@ public class ClassDetailsActivity extends AppCompatActivity {
             });
         }
     }
+    private void exportarAsistenciaEnCSV() {
+        // Obtención del modelo de clase desde el Intent
+        ClassModel classModel = (ClassModel) getIntent().getSerializableExtra("classModel");
+
+        // Consulta de los alumnos y sus asistencias
+        db.collection("Control_Asistencia")
+                .whereEqualTo("classId", classModel.getClassId())
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        List<String[]> data = new ArrayList<>();
+                        data.add(new String[]{"Alumno", "Asistencias"}); // Encabezado del CSV
+
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            String userId = document.getString("userId");
+                            long asistencias = document.getLong("asistencias");
+
+                            // Obtener el nombre del alumno
+                            db.collection("Usuarios").document(userId).get().addOnSuccessListener(userDoc -> {
+                                if (userDoc.exists()) {
+                                    String nombre = userDoc.getString("Nombre");
+                                    data.add(new String[]{nombre, String.valueOf(asistencias)});
+                                }
+
+                                // Cuando se hayan agregado todos los datos, generar el archivo CSV
+                                if (data.size() == task.getResult().size() + 1) { // +1 por el encabezado
+                                    generarCSV(classModel.getClassName(), data);
+                                }
+                            });
+                        }
+                    }
+                });
+    }
+
+    private void generarCSV(String className, List<String[]> data) {
+        String fileName = className + "_lista_de_asistencia_" + new SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(new Date()) + ".csv";
+
+        File csvFile = new File(getExternalFilesDir(null), fileName);
+        try (CSVWriter writer = new CSVWriter(new FileWriter(csvFile))) {
+            writer.writeAll(data);
+
+            // Mostrar un mensaje de éxito
+            Toast.makeText(this, "Archivo CSV generado: " + csvFile.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+
+            // Opcional: Permitir al usuario compartir el archivo CSV
+            compartirCSV(csvFile);
+        } catch (IOException e) {
+            Log.e("ClassDetailsActivity", "Error al generar el archivo CSV", e);
+            Toast.makeText(this, "Error al generar el archivo CSV", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void compartirCSV(File csvFile) {
+        Uri fileUri = FileProvider.getUriForFile(this, "com.example.tesoemcheckpoint_isc.fileprovider", csvFile);
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("text/csv");
+        intent.putExtra(Intent.EXTRA_STREAM, fileUri);
+        startActivity(Intent.createChooser(intent, "Compartir archivo CSV"));
+    }
+
 }

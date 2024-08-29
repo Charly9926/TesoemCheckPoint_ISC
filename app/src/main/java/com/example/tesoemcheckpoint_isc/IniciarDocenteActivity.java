@@ -1,9 +1,11 @@
 package com.example.tesoemcheckpoint_isc;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.text.HtmlCompat;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -33,6 +35,7 @@ public class IniciarDocenteActivity extends AppCompatActivity {
     private TextInputEditText emailInput;
     private TextInputEditText passwordInput;
     private Button loginButton;
+    private TextView forgotPasswordTextView;
 
     //Firebase
     FirebaseAuth firebaseAuth;
@@ -53,6 +56,7 @@ public class IniciarDocenteActivity extends AppCompatActivity {
         emailInput = findViewById(R.id.email_input);
         passwordInput = findViewById(R.id.password_input);
         loginButton = findViewById(R.id.login_button);
+        forgotPasswordTextView = findViewById(R.id.forgot_password);
 
         // OnClickListener para boton
         loginButton.setOnClickListener(new View.OnClickListener() {
@@ -94,6 +98,42 @@ public class IniciarDocenteActivity extends AppCompatActivity {
         spannable.setSpan(clickableSpan, texto.indexOf("Registrarse"), texto.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         Tregdocente.setMovementMethod(LinkMovementMethod.getInstance());
         Tregdocente.setText(spannable);
+
+        forgotPasswordTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Mostrar el AlertDialog
+                new AlertDialog.Builder(IniciarDocenteActivity.this)
+                        .setTitle("Restablecer contraseña")
+                        .setMessage("¿Quieres restablecer tu contraseña? Se enviará un correo para su recuperación.")
+                        .setPositiveButton("Sí", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // Implementar la función de restablecimiento de contraseña
+                                String email = emailInput.getText().toString().trim();
+                                if (!email.isEmpty()) {
+                                    firebaseAuth.sendPasswordResetEmail(email)
+                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                @Override
+                                                public void onSuccess(Void aVoid) {
+                                                    Toast.makeText(IniciarDocenteActivity.this, "Correo de recuperación enviado", Toast.LENGTH_SHORT).show();
+                                                }
+                                            })
+                                            .addOnFailureListener(new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(@NonNull Exception e) {
+                                                    Toast.makeText(IniciarDocenteActivity.this, "Error al enviar el correo de recuperación", Toast.LENGTH_SHORT).show();
+                                                }
+                                            });
+                                } else {
+                                    emailInputLayout.setError("Introduce tu correo para restablecer la contraseña");
+                                }
+                            }
+                        })
+                        .setNegativeButton("No", null)
+                        .show();
+            }
+        });
     }
     //Validar si el usuario es docente
     private void esDocente(String uid) {

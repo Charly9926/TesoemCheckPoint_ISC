@@ -129,6 +129,7 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- iniciar session button -->
+
     <Button
         android:id="@+id/login_button"
         android:layout_width="320dp"
@@ -136,7 +137,7 @@
         android:layout_below="@+id/password_input_layout"
         android:layout_alignParentStart="true"
         android:layout_marginStart="36dp"
-        android:layout_marginTop="38dp"
+        android:layout_marginTop="24dp"
         android:layout_marginEnd="16dp"
         android:backgroundTint="@color/TesoVerde2"
         android:text="@string/iniciasession"
@@ -160,6 +161,22 @@
         android:textColorLink="#FFFFFF"
         android:textSize="14sp"
         android:translationY="-0.48sp" />
+
+    <TextView
+        android:id="@+id/forgot_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/Tregdocente"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="115dp"
+        android:layout_marginTop="9dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:minHeight="48dp"
+        android:text="@string/olvidaste_tu_contrase"
+        android:textColor="@color/TesoBlanco"
+        android:textSize="14sp"
+        android:textStyle="bold" />
 
 
 </RelativeLayout>

@@ -55,7 +55,8 @@
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:orientation="vertical"
-      android:layout_marginTop="16dp">
+      android:layout_marginTop="16dp"
+      android:gravity="center_horizontal">
 
     <Button
         android:id="@+id/editarClaseButton"
@@ -85,6 +86,17 @@
         android:backgroundTint="@color/TesoVerdeClaro"
         android:textColor="@android:color/white"
         android:padding="16dp" />
+
+    <Button
+        android:id="@+id/exportCsvButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Exportar en CSV"
+        android:layout_marginTop="16dp"
+        android:padding="12dp"
+        android:backgroundTint="@color/TesoVerdeClaro"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"/>
 
   </LinearLayout>
 
