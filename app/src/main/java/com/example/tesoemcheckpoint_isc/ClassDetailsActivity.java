@@ -511,36 +511,57 @@ public class ClassDetailsActivity extends AppCompatActivity {
         // Obtención del modelo de clase desde el Intent
         ClassModel classModel = (ClassModel) getIntent().getSerializableExtra("classModel");
 
-        // Consulta de los alumnos y sus asistencias
-        db.collection("Control_Asistencia")
-                .whereEqualTo("classId", classModel.getClassId())
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        List<String[]> data = new ArrayList<>();
-                        data.add(new String[]{"Alumno", "Asistencias"}); // Encabezado del CSV
+        // Lista para almacenar los datos para el CSV
+        List<String[]> data = new ArrayList<>();
+        data.add(new String[]{"Alumno", "Asistencias"}); // Encabezado del CSV
 
-                        for (QueryDocumentSnapshot document : task.getResult()) {
-                            String userId = document.getString("userId");
-                            long asistencias = document.getLong("asistencias");
+        // Consulta de los miembros de la clase
+        db.collection("Clases").document(classModel.getClassId()).get().addOnSuccessListener(classDoc -> {
+            if (classDoc.exists()) {
+                List<String> memberIds = (List<String>) classDoc.get("members");
+                if (memberIds != null) {
+                    // Inicializar mapas para almacenar nombres y asistencias por userId
+                    Map<String, String> nombresMap = new HashMap<>();
+                    Map<String, String> asistenciasMap = new HashMap<>();
 
-                            // Obtener el nombre del alumno
-                            db.collection("Usuarios").document(userId).get().addOnSuccessListener(userDoc -> {
-                                if (userDoc.exists()) {
-                                    String nombre = userDoc.getString("Nombre");
-                                    data.add(new String[]{nombre, String.valueOf(asistencias)});
+                    // Obtener nombres de todos los miembros y inicializar asistencias en "0"
+                    for (String userId : memberIds) {
+                        db.collection("Usuarios").document(userId).get().addOnSuccessListener(userDoc -> {
+                            if (userDoc.exists()) {
+                                String nombre = userDoc.getString("Nombre");
+                                nombresMap.put(userId, nombre);
+                                asistenciasMap.put(userId, "0");
+                                data.add(new String[]{nombre, "0"});
+                            }
+                        });
+                    }
+
+                    // Consultar asistencias en Control_Asistencia
+                    db.collection("Control_Asistencia")
+                            .whereEqualTo("classId", classModel.getClassId())
+                            .get()
+                            .addOnSuccessListener(asistenciaDocs -> {
+                                for (QueryDocumentSnapshot doc : asistenciaDocs) {
+                                    String userId = doc.getString("userId");
+                                    long asistencias = doc.getLong("asistencias");
+                                    asistenciasMap.put(userId, String.valueOf(asistencias));
                                 }
-
-                                // Cuando se hayan agregado todos los datos, generar el archivo CSV
-                                if (data.size() == task.getResult().size() + 1) { // +1 por el encabezado
+                                // Actualizar datos del CSV con asistencias correctas
+                                for (int i = 1; i < data.size(); i++) { // Comienza en 1 para evitar el encabezado
+                                    String userIdInList = memberIds.get(i - 1); // i-1 para ajustar el índice
+                                    String nombre = nombresMap.get(userIdInList);
+                                    String asistencia = asistenciasMap.get(userIdInList);
+                                    data.set(i, new String[]{nombre, asistencia});
+                                }
+                                // Generar archivo CSV una vez que se hayan procesado todos los datos
+                                if (data.size() - 1 == asistenciasMap.size()) { // -1 por el encabezado
                                     generarCSV(classModel.getClassName(), data);
                                 }
                             });
-                        }
-                    }
-                });
+                }
+            }
+        });
     }
-
     private void generarCSV(String className, List<String[]> data) {
         String fileName = className + "_lista_de_asistencia_" + new SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(new Date()) + ".csv";
 
